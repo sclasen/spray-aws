@@ -1,0 +1,5 @@
+target
+project/target
+.env
+.idea
+.idea_modules
