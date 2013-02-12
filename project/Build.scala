@@ -13,26 +13,19 @@ object Build extends Build {
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases", "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases")
   ) ++ Defaults.defaultSettings  ++ publishSettings
 
-  val stub = Project(
-    id = "spray-aws-httpclient-stub",
-    base = file("spray-httpclient-stub"),
-    settings = buildSettings
-  )
-
   val spray_aws = Project(
     id = "spray-aws",
     base = file("spray-aws"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= dependencies)
-  ).dependsOn(stub)
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
+  )
 
   val spray_dyanmodb = Project(
     id = "spray-dynamodb",
     base = file("spray-dynamodb"),
-    dependencies = Seq(spray_aws),
-    settings = buildSettings ++ Seq(libraryDependencies ++= dependencies)
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
-  val root = Project(id = "top", base = file("."), settings = buildSettings ++ parentSettings).aggregate(stub,spray_aws,spray_dyanmodb)
+  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dyanmodb)
 
 
   def publishSettings: Seq[Setting[_]] = Seq(
@@ -81,9 +74,10 @@ object Build extends Build {
     publishArtifact in Compile := false
   )
 
-  def dependencies = Seq(aws, spray, metrics, akka, scalaTest, akka_testkit)
+  def deps = Seq(aws, spray, metrics, akka, scalaTest, akka_testkit, apache)
 
   val aws = "com.amazonaws" % "aws-java-sdk" % "1.3.30" % "compile" exclude("org.apache.httpcomponents", "httpclient") exclude("org.apache.httpcomponents", "httpcore")
+  val apache = "org.apache.httpcomponents" % "httpclient" % "4.1" % "provided"    //you dont need this at runtime
   val spray = "io.spray" % "spray-client" % "1.1-M7" % "compile"
   val metrics = "com.yammer.metrics" % "metrics-core" % "2.2.0" % "compile"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.1.0" % "compile"

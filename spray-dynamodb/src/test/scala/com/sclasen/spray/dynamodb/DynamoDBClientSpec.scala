@@ -14,11 +14,18 @@ class DynamoDBClientSpec extends WordSpec with MustMatchers {
   "A DynamoDBClient" must {
     "List tables" in {
       val system = ActorSystem("test")
-      val props = DynamoDBClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(10 seconds), system, system)
+      val props = DynamoDBClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system)
       val client = new DynamoDBClient(props)
-      val result = Await.result(client.sendListTables(new ListTablesRequest()), 10 seconds)
-      println(result)
-      result.getTableNames.size() must be > 1
+      try {
+        val result = Await.result(client.sendListTables(new ListTablesRequest()), 100 seconds)
+        println(result)
+        result.getTableNames.size() must be > 1
+      }
+      catch {
+        case e: Exception =>
+          println(e)
+          e.printStackTrace()
+      }
     }
   }
 

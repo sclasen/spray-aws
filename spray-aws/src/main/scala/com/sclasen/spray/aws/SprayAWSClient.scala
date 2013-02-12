@@ -51,12 +51,16 @@ abstract class SprayAWSClient(props:SprayAWSClientProps) {
 
   def exceptionUnmarshallers: JList[JsonErrorUnmarshaller]
 
-  val endpointUri = new URI(s"https://${props.endpoint}")
+  /************************************************************************************************/
+  /* I PROMISE YOU THAT THE PROTOCOL NEEDS TO BE http NOT https HERE and THE PORT NEEDS TO BE 443 */
+  val endpointUri = new URI(s"http://${props.endpoint}:443")
+  /* ^  It tricks the AwsSigner and spray into agreeing on host headers  ^*/
+  /************************************************************************/
   val jsonFactory = new JsonFactory()
 
   val connection = DefaultHttpClient(props.system)
   val conduit = props.factory.actorOf(
-    props = Props(new HttpConduit(connection, props.endpoint))
+    props = Props(new HttpConduit(connection, props.endpoint, port = 443, sslEnabled = true))
   )
 
   val pipeline = HttpConduit.sendReceive(conduit)
@@ -70,6 +74,7 @@ abstract class SprayAWSClient(props:SprayAWSClientProps) {
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
+    awsReq.getHeaders.put("User-Agent","spray-can/1.1-M7")
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     var path: String = awsReq.getResourcePath
