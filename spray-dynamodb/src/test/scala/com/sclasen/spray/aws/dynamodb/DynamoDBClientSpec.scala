@@ -1,4 +1,4 @@
-package com.sclasen.spray.dynamodb
+package com.sclasen.spray.aws.dynamodb
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers

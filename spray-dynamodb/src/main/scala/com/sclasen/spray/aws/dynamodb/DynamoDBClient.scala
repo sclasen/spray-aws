@@ -1,4 +1,4 @@
-package com.sclasen.spray.dynamodb
+package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
 import collection.JavaConverters._
@@ -8,6 +8,7 @@ import com.amazonaws.transform.JsonErrorUnmarshaller
 import concurrent.Future
 import java.util.{ List => JList }
 import akka.util.Timeout
+import com.sclasen.spray.aws._
 
 case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "dynamodb"

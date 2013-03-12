@@ -1,4 +1,4 @@
-package com.sclasen.spray.dynamodb
+package com.sclasen.spray.aws
 
 import akka.actor.{ ActorRefFactory, ActorSystem, ActorContext, Props }
 import collection.JavaConverters._
