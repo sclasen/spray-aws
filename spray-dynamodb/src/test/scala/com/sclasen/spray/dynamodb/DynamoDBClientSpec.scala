@@ -8,7 +8,6 @@ import concurrent.Await
 import concurrent.duration._
 import com.amazonaws.services.dynamodb.model.ListTablesRequest
 
-
 class DynamoDBClientSpec extends WordSpec with MustMatchers {
 
   "A DynamoDBClient" must {
@@ -20,8 +19,7 @@ class DynamoDBClientSpec extends WordSpec with MustMatchers {
         val result = Await.result(client.sendListTables(new ListTablesRequest()), 100 seconds)
         println(result)
         result.getTableNames.size() must be > 1
-      }
-      catch {
+      } catch {
         case e: Exception =>
           println(e)
           e.printStackTrace()

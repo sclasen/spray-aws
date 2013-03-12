@@ -1,6 +1,6 @@
 package com.sclasen.spray.dynamodb
 
-import akka.actor.{ActorRefFactory, ActorSystem, ActorContext, Props}
+import akka.actor.{ ActorRefFactory, ActorSystem, ActorContext, Props }
 import collection.JavaConverters._
 import com.amazonaws.auth.{ AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
@@ -32,16 +32,16 @@ trait SprayAWSClientProps {
 
   def secret: String
 
-  def system:ActorSystem
+  def system: ActorSystem
 
-  def factory:ActorRefFactory
+  def factory: ActorRefFactory
 
-  def service:String
+  def service: String
 
-  def endpoint:String
+  def endpoint: String
 }
 
-abstract class SprayAWSClient(props:SprayAWSClientProps) {
+abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   implicit val timeout = props.operationTimeout
 
@@ -74,7 +74,7 @@ abstract class SprayAWSClient(props:SprayAWSClientProps) {
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
-    awsReq.getHeaders.put("User-Agent","spray-can/1.1-M7")
+    awsReq.getHeaders.put("User-Agent", "spray-can/1.1-M7")
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     var path: String = awsReq.getResourcePath

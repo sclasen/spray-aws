@@ -1,6 +1,6 @@
 package com.sclasen.spray.dynamodb
 
-import akka.actor.{ActorRefFactory, ActorSystem, ActorContext}
+import akka.actor.{ ActorRefFactory, ActorSystem }
 import collection.JavaConverters._
 import com.amazonaws.services.dynamodb.model._
 import com.amazonaws.services.dynamodb.model.transform._
@@ -9,11 +9,8 @@ import concurrent.Future
 import java.util.{ List => JList }
 import akka.util.Timeout
 
-case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system:ActorSystem, factory:ActorRefFactory) extends SprayAWSClientProps{
+case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "dynamodb"
-
-  val endpoint = "dynamodb.us-east-1.amazonaws.com"
-
 }
 
 object MarshallersAndUnmarshallers {
