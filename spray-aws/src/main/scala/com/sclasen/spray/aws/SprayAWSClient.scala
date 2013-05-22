@@ -11,7 +11,7 @@ import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse
 import java.net.URI
 import java.util.{ List => JList }
 import org.codehaus.jackson.JsonFactory
-import spray.can.client.DefaultHttpClient
+import spray.can.client.{ ClientSettings, DefaultHttpClient }
 import spray.client.HttpConduit
 import spray.http.HttpMethods._
 import spray.http.HttpProtocols._
@@ -57,6 +57,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   /* ^  It tricks the AwsSigner and spray into agreeing on host headers  ^*/
   /************************************************************************/
   val jsonFactory = new JsonFactory()
+  val clientSettings = ClientSettings(props.system.settings.config)
 
   val connection = DefaultHttpClient(props.system)
   val conduit = props.factory.actorOf(
@@ -74,7 +75,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
-    awsReq.getHeaders.put("User-Agent", "spray-can/1.1-M7")
+    awsReq.getHeaders.put("User-Agent", clientSettings.UserAgentHeader)
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     var path: String = awsReq.getResourcePath
