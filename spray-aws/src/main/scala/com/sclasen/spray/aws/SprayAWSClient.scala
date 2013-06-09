@@ -1,6 +1,7 @@
 package com.sclasen.spray.aws
 
-import akka.actor.{ ActorRefFactory, ActorSystem, ActorContext, Props }
+import akka.actor._
+import akka.io.IO
 import collection.JavaConverters._
 import com.amazonaws.auth.{ AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
@@ -11,19 +12,19 @@ import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse
 import java.net.URI
 import java.util.{ List => JList }
 import org.codehaus.jackson.JsonFactory
-import spray.can.client.{ ClientSettings, DefaultHttpClient }
-import spray.client.HttpConduit
-import spray.http.HttpMethods._
 import spray.http.HttpProtocols._
-import spray.http.MediaTypes.CustomMediaType
-import spray.http.HttpMethod
-import spray.http.HttpRequest
-import spray.http.HttpHeaders.RawHeader
-import spray.http.HttpHeader
-import spray.http.HttpBody
-import spray.http.HttpResponse
-import akka.util.Timeout
 import akka.event.LoggingAdapter
+import spray.can.{ HostConnectorInfo, HostConnectorSetup, Http }
+import spray.http.HttpHeaders.RawHeader
+import spray.http.HttpResponse
+import akka.actor.ActorSystem
+import akka.util.Timeout
+import spray.http._
+import spray.http.HttpMethods._
+import spray.client.pipelining._
+import akka.pattern._
+import scala.concurrent.Await
+import spray.can.client.ClientConnectionSettings
 
 trait SprayAWSClientProps {
   def operationTimeout: Timeout
@@ -51,36 +52,42 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   def exceptionUnmarshallers: JList[JsonErrorUnmarshaller]
 
-  /************************************************************************************************/
+  /** **********************************************************************************************/
   /* I PROMISE YOU THAT THE PROTOCOL NEEDS TO BE http NOT https HERE and THE PORT NEEDS TO BE 443 */
-  val endpointUri = new URI(s"http://${props.endpoint}:443")
+  val endpointUri = new URI(s"https://${props.endpoint}")
   /* ^  It tricks the AwsSigner and spray into agreeing on host headers  ^*/
-  /************************************************************************/
+  /** **********************************************************************/
   val jsonFactory = new JsonFactory()
-  val clientSettings = ClientSettings(props.system.settings.config)
+  val clientSettings = ClientConnectionSettings(props.system)
 
-  val connection = DefaultHttpClient(props.system)
-  val conduit = props.factory.actorOf(
-    props = Props(new HttpConduit(connection, props.endpoint, port = 443, sslEnabled = true))
-  )
+  val connection = {
+    implicit val s = props.system
+    Await.result((IO(Http) ? HostConnectorSetup(props.endpoint, port = 443, sslEncryption = true)).map {
+      case HostConnectorInfo(hostConnector, _) => hostConnector
+    }, timeout.duration)
+  }
 
-  val pipeline = HttpConduit.sendReceive(conduit)
+  val pipeline = sendReceive(connection)
 
   val credentials = new BasicAWSCredentials(props.key, props.secret)
   val signer = new AWS4Signer()
   signer.setServiceName(props.service)
 
-  val `application/x-amz-json-1.0` = CustomMediaType("application/x-amz-json-1.0")
+  val `application/x-amz-json-1.0` = MediaType.custom("application/x-amz-json-1.0")
 
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
-    awsReq.getHeaders.put("User-Agent", clientSettings.UserAgentHeader)
+    awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader)
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
+    awsReq.getHeaders.remove("Host")
+    awsReq.getHeaders.remove("User-Agent")
+    awsReq.getHeaders.remove("Content-Length")
+    awsReq.getHeaders.remove("Content-Type")
     var path: String = awsReq.getResourcePath
     if (path == "") path = "/"
-    val request = HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpBody(`application/x-amz-json-1.0`, body), `HTTP/1.1`)
+    val request = HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(`application/x-amz-json-1.0`, body), `HTTP/1.1`)
     request
   }
 
@@ -88,7 +95,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
     awsResp.setContent(new StringInputStream(response.entity.asString))
-    awsResp.setStatusCode(response.status.value)
+    awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
     if (awsResp.getStatusCode == 200) {
       val handler = new JsonResponseHandler[T](unmarshaller)
