@@ -14,7 +14,8 @@ import java.util.{ List => JList }
 import org.codehaus.jackson.JsonFactory
 import spray.http.HttpProtocols._
 import akka.event.LoggingAdapter
-import spray.can.{ HostConnectorInfo, HostConnectorSetup, Http }
+import spray.can.Http
+import spray.can.Http._
 import spray.http.HttpHeaders.RawHeader
 import spray.http.HttpResponse
 import akka.actor.ActorSystem

@@ -7,9 +7,9 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.2.0-SNAPSHOT",
-    scalaVersion := "2.10.1",
-    crossScalaVersions := Seq("2.10.1"),
+    version := "0.2.0-spray-20130712",
+    scalaVersion := "2.10.2",
+    crossScalaVersions := Seq("2.10.2"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
       "spray nightlies" at "http://nightlies.spray.io/",
@@ -81,10 +81,10 @@ object Build extends Build {
 
   val aws = "com.amazonaws" % "aws-java-sdk" % "1.3.30" % "compile" exclude("org.apache.httpcomponents", "httpclient") exclude("org.apache.httpcomponents", "httpcore")
   val apache = "org.apache.httpcomponents" % "httpclient" % "4.1" % "provided"    //you dont need this at runtime
-  val spray = "io.spray" % "spray-client" % "1.2-20130605" % "compile"
+  val spray = "io.spray" % "spray-client" % "1.2-20130712" % "compile"
   val metrics = "com.yammer.metrics" % "metrics-core" % "2.2.0" % "compile"
-  val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0-RC1" % "compile"
-  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.2.0-RC1" % "test"
+  val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.0" % "compile"
+  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.2.0" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"                 % "1.9.1" % "test"
 
 
