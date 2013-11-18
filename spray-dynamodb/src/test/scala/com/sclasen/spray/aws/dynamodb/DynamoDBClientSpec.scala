@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.Await
 import concurrent.duration._
-import com.amazonaws.services.dynamodb.model.ListTablesRequest
+import com.amazonaws.services.dynamodbv2.model.ListTablesRequest
 
 class DynamoDBClientSpec extends WordSpec with MustMatchers {
 

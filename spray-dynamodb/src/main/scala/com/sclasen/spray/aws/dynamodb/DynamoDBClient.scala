@@ -2,8 +2,8 @@ package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
 import collection.JavaConverters._
-import com.amazonaws.services.dynamodb.model._
-import com.amazonaws.services.dynamodb.model.transform._
+import com.amazonaws.services.dynamodbv2.model._
+import com.amazonaws.services.dynamodbv2.model.transform._
 import com.amazonaws.transform.JsonErrorUnmarshaller
 import concurrent.Future
 import java.util.{ List => JList }

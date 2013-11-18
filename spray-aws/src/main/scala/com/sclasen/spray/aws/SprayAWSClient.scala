@@ -11,7 +11,7 @@ import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHa
 import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse, DefaultRequest }
 import java.net.URI
 import java.util.{ List => JList }
-import org.codehaus.jackson.JsonFactory
+import com.fasterxml.jackson.core.JsonFactory
 import spray.http.HttpProtocols._
 import akka.event.LoggingAdapter
 import spray.can.Http
@@ -79,7 +79,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
-    awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader)
+    awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader.map(_.value).getOrElse("spray-aws"))
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     awsReq.getHeaders.remove("Host")
