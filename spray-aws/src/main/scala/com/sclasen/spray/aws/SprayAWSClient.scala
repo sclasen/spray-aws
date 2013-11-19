@@ -17,7 +17,6 @@ import akka.event.LoggingAdapter
 import spray.can.Http
 import spray.can.Http._
 import spray.http.HttpHeaders.RawHeader
-import spray.http.HttpResponse
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import spray.http._
@@ -52,12 +51,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def log: LoggingAdapter
 
   def exceptionUnmarshallers: JList[JsonErrorUnmarshaller]
-
-  /** **********************************************************************************************/
-  /* I PROMISE YOU THAT THE PROTOCOL NEEDS TO BE http NOT https HERE and THE PORT NEEDS TO BE 443 */
   val endpointUri = new URI(s"https://${props.endpoint}")
-  /* ^  It tricks the AwsSigner and spray into agreeing on host headers  ^*/
-  /** **********************************************************************/
   val jsonFactory = new JsonFactory()
   val clientSettings = ClientConnectionSettings(props.system)
 
