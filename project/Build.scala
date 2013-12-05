@@ -7,7 +7,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.2.1-SNAPSHOT",
+    version := "0.2.1",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
@@ -81,7 +81,7 @@ object Build extends Build {
 
   val aws = "com.amazonaws" % "aws-java-sdk" % "1.6.6" % "compile" exclude("org.apache.httpcomponents", "httpclient") exclude("org.apache.httpcomponents", "httpcore")
   val apache = "org.apache.httpcomponents" % "httpclient" % "4.1" % "provided"    //you dont need this at runtime
-  val spray = "io.spray" % "spray-client" % "1.2-RC3" % "compile"
+  val spray = "io.spray" % "spray-client" % "1.2.0" % "compile"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.2.3" % "compile"
   val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.2.3" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"                 % "2.0" % "test"
