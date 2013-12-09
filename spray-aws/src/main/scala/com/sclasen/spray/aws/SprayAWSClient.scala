@@ -55,14 +55,14 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   val jsonFactory = new JsonFactory()
   val clientSettings = ClientConnectionSettings(props.system)
 
-  val connection = {
+  def connection = {
     implicit val s = props.system
-    Await.result((IO(Http) ? HostConnectorSetup(props.endpoint, port = 443, sslEncryption = true)).map {
+    (IO(Http) ? HostConnectorSetup(props.endpoint, port = 443, sslEncryption = true)).map {
       case HostConnectorInfo(hostConnector, _) => hostConnector
-    }, timeout.duration)
+    }
   }
 
-  val pipeline = sendReceive(connection)
+  def pipeline(req: HttpRequest) = connection.flatMap(sendReceive(_).apply(req))
 
   val credentials = new BasicAWSCredentials(props.key, props.secret)
   val signer = new AWS4Signer()
