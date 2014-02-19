@@ -51,13 +51,21 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def log: LoggingAdapter
 
   def exceptionUnmarshallers: JList[JsonErrorUnmarshaller]
-  val endpointUri = new URI(s"https://${props.endpoint}")
+  val endpointUri = new URI(props.endpoint)
+  val port = {
+    if (endpointUri.getPort > 0) endpointUri.getPort
+    else {
+      if (props.endpoint.startsWith("https")) 443
+      else 80
+    }
+  }
+  val ssl = props.endpoint.startsWith("https")
   val jsonFactory = new JsonFactory()
   val clientSettings = ClientConnectionSettings(props.system)
 
   def connection = {
     implicit val s = props.system
-    (IO(Http) ? HostConnectorSetup(props.endpoint, port = 443, sslEncryption = true)).map {
+    (IO(Http) ? HostConnectorSetup(endpointUri.getHost, port = port, sslEncryption = ssl)).map {
       case HostConnectorInfo(hostConnector, _) => hostConnector
     }
   }

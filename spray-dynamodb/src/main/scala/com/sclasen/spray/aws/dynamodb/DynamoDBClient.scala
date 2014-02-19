@@ -10,7 +10,7 @@ import java.util.{ List => JList }
 import akka.util.Timeout
 import com.sclasen.spray.aws._
 
-case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "dynamodb"
 }
 
