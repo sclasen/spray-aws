@@ -77,10 +77,9 @@ object Build extends Build {
     publishArtifact in Compile := false
   )
 
-  def deps = Seq(aws, spray, akka, scalaTest, akka_testkit, apache)
+  def deps = Seq(aws, spray, akka, scalaTest, akka_testkit)
 
-  val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile" exclude("org.apache.httpcomponents", "httpclient") exclude("org.apache.httpcomponents", "httpcore")
-  val apache = "org.apache.httpcomponents" % "httpclient" % "4.1" % "provided"    //you dont need this at runtime
+  val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile"
   val spray = "io.spray" % "spray-client" % "1.3-RC1" % "compile"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.0-RC2" % "compile"
   val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.0-RC2" % "test"
