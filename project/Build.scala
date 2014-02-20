@@ -23,7 +23,7 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   )
 
-  val spray_dyanmodb = Project(
+  val spray_dynamodb = Project(
     id = "spray-dynamodb",
     base = file("spray-dynamodb"),
     settings = buildSettings ++ Seq(libraryDependencies ++= deps)
@@ -35,7 +35,14 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
-  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dyanmodb,spray_sqs)
+  val spray_kinesis = Project(
+    id = "spray-kinesis",
+    base = file("spray-kinesis"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
+  ).dependsOn(spray_aws)
+
+  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dynamodb,spray_kinesis,spray_sqs)
+
 
 
   def publishSettings: Seq[Setting[_]] = Seq(
