@@ -76,12 +76,13 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   val signer = new AWS4Signer()
   signer.setServiceName(props.service)
 
-  val `application/x-amz-json-1.0` = MediaType.custom("application/x-amz-json-1.0")
+  val defaultContentType = "application/x-amz-json-1.0"
 
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
     awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader.map(_.value).getOrElse("spray-aws"))
+    val contentType = Option(awsReq.getHeaders.get("Content-Type"))
     val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     awsReq.getHeaders.remove("Host")
@@ -90,7 +91,8 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     awsReq.getHeaders.remove("Content-Type")
     var path: String = awsReq.getResourcePath
     if (path == "") path = "/"
-    val request = HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(`application/x-amz-json-1.0`, body), `HTTP/1.1`)
+    val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
+    val request = HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
     request
   }
 
