@@ -65,7 +65,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
         {
           val request = new GetShardIteratorRequest()
           request.setStreamName(testStreamName)
-          if (start.isDefined) {
+          if (start.isEmpty) {
             request.setShardIteratorType(TRIM_HORIZON)
           } else {
             request.setShardIteratorType(AT_SEQUENCE_NUMBER)
