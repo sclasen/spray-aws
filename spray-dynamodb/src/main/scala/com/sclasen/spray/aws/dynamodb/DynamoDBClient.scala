@@ -9,6 +9,7 @@ import concurrent.Future
 import java.util.{ List => JList }
 import akka.util.Timeout
 import com.sclasen.spray.aws._
+import com.amazonaws.AmazonServiceException
 
 case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "dynamodb"
@@ -61,40 +62,65 @@ class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(prop
 
   def exceptionUnmarshallers: JList[JsonErrorUnmarshaller] = dynamoExceptionUnmarshallers
 
-  def sendListTables(aws: ListTablesRequest): Future[ListTablesResult] =
+  def sendListTables(aws: ListTablesRequest): Future[ListTablesResult] = fold(listTables(aws))
+
+  def listTables(aws: ListTablesRequest): Future[Either[AmazonServiceException, ListTablesResult]] =
     pipeline(request(aws)).map(response[ListTablesResult])
 
-  def sendQuery(aws: QueryRequest): Future[QueryResult] =
+  def sendQuery(aws: QueryRequest): Future[QueryResult] = fold(query(aws))
+
+  def query(aws: QueryRequest): Future[Either[AmazonServiceException, QueryResult]] =
     pipeline(request(aws)).map(response[QueryResult])
 
-  def sendUpdateItem(aws: UpdateItemRequest): Future[UpdateItemResult] =
+  def sendUpdateItem(aws: UpdateItemRequest): Future[UpdateItemResult] = fold(updateItem(aws))
+
+  def updateItem(aws: UpdateItemRequest): Future[Either[AmazonServiceException, UpdateItemResult]] =
     pipeline(request(aws)).map(response[UpdateItemResult])
 
-  def sendPutItem(aws: PutItemRequest): Future[PutItemResult] =
+  def sendPutItem(aws: PutItemRequest): Future[PutItemResult] = fold(putItem(aws))
+
+  def putItem(aws: PutItemRequest): Future[Either[AmazonServiceException, PutItemResult]] =
     pipeline(request(aws)).map(response[PutItemResult])
 
-  def sendDescribeTable(aws: DescribeTableRequest): Future[DescribeTableResult] =
+  def sendDescribeTable(aws: DescribeTableRequest): Future[DescribeTableResult] = fold(describeTable(aws))
+
+  def describeTable(aws: DescribeTableRequest): Future[Either[AmazonServiceException, DescribeTableResult]] =
     pipeline(request(aws)).map(response[DescribeTableResult])
 
-  def sendCreateTable(aws: CreateTableRequest): Future[CreateTableResult] =
+  def sendCreateTable(aws: CreateTableRequest): Future[CreateTableResult] = fold(createTable(aws))
+
+  def createTable(aws: CreateTableRequest): Future[Either[AmazonServiceException, CreateTableResult]] =
     pipeline(request(aws)).map(response[CreateTableResult])
 
-  def sendUpdateTable(aws: UpdateTableRequest): Future[UpdateTableResult] =
+  def sendUpdateTable(aws: UpdateTableRequest): Future[UpdateTableResult] = fold(updateTable(aws))
+
+  def updateTable(aws: UpdateTableRequest): Future[Either[AmazonServiceException, UpdateTableResult]] =
     pipeline(request(aws)).map(response[UpdateTableResult])
 
-  def sendDeleteTable(aws: DeleteTableRequest): Future[DeleteTableResult] =
+  def sendDeleteTable(aws: DeleteTableRequest): Future[DeleteTableResult] = fold(deleteTable(aws))
+
+  def deleteTable(aws: DeleteTableRequest): Future[Either[AmazonServiceException, DeleteTableResult]] =
     pipeline(request(aws)).map(response[DeleteTableResult])
 
-  def sendGetItem(aws: GetItemRequest): Future[GetItemResult] =
+  def sendGetItem(aws: GetItemRequest): Future[GetItemResult] = fold(getItem(aws))
+
+  def getItem(aws: GetItemRequest): Future[Either[AmazonServiceException, GetItemResult]] =
     pipeline(request(aws)).map(response[GetItemResult])
 
   def sendBatchWriteItem(awsWrite: BatchWriteItemRequest): Future[BatchWriteItemResult] =
+    fold(batchWriteItem(awsWrite))
+
+  def batchWriteItem(awsWrite: BatchWriteItemRequest): Future[Either[AmazonServiceException, BatchWriteItemResult]] =
     pipeline(request(awsWrite)).map(response[BatchWriteItemResult])
 
-  def sendBatchGetItem(awsGet: BatchGetItemRequest): Future[BatchGetItemResult] =
+  def sendBatchGetItem(awsGet: BatchGetItemRequest): Future[BatchGetItemResult] = fold(batchGetItem(awsGet))
+
+  def batchGetItem(awsGet: BatchGetItemRequest): Future[Either[AmazonServiceException, BatchGetItemResult]] =
     pipeline(request(awsGet)).map(response[BatchGetItemResult])
 
-  def sendDeleteItem(awsDel: DeleteItemRequest): Future[DeleteItemResult] =
+  def sendDeleteItem(awsDel: DeleteItemRequest): Future[DeleteItemResult] = fold(deleteItem(awsDel))
+
+  def deleteItem(awsDel: DeleteItemRequest): Future[Either[AmazonServiceException, DeleteItemResult]] =
     pipeline(request(awsDel)).map(response[DeleteItemResult])
 
 }

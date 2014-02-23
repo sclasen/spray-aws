@@ -23,8 +23,10 @@ import spray.http._
 import spray.http.HttpMethods._
 import spray.client.pipelining._
 import akka.pattern._
-import scala.concurrent.Await
+import scala.concurrent.{ Future, Await }
 import spray.can.client.ClientConnectionSettings
+import scala.util.control.NoStackTrace
+import spray.client.pipelining
 
 trait SprayAWSClientProps {
   def operationTimeout: Timeout
@@ -96,7 +98,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     request
   }
 
-  def response[T](response: HttpResponse)(implicit unmarshaller: Unmarshaller[T, JsonUnmarshallerContext]): T = {
+  def response[T](response: HttpResponse)(implicit unmarshaller: Unmarshaller[T, JsonUnmarshallerContext]): Either[AmazonServiceException, T] = {
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
     awsResp.setContent(new StringInputStream(response.entity.asString))
@@ -106,13 +108,13 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
       val handler = new JsonResponseHandler[T](unmarshaller)
       val handle: AmazonWebServiceResponse[T] = handler.handle(awsResp)
       val resp = handle.getResult
-      resp
+      Right(resp)
     } else {
       response.headers.foreach {
         h => awsResp.addHeader(h.name, h.value)
       }
       val errorResponseHandler = new JsonErrorResponseHandler(exceptionUnmarshallers.asInstanceOf[JList[Unmarshaller[AmazonServiceException, JSONObject]]])
-      throw errorResponseHandler.handle(awsResp)
+      Left(errorResponseHandler.handle(awsResp))
     }
   }
 
@@ -122,6 +124,8 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
         RawHeader(k, v)
     }.toList
   }
+
+  def fold[T](fe: Future[Either[AmazonServiceException, T]]): Future[T] = fe.map(_.fold(e => throw e, t => t))
 
   implicit def bridgeMethods(m: HttpMethodName): HttpMethod = m match {
     case HttpMethodName.POST => POST
