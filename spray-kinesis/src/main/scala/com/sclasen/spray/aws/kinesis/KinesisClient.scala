@@ -13,6 +13,7 @@ import com.amazonaws.services.kinesis.model.ListStreamsRequest
 import com.amazonaws.services.kinesis.model.ListStreamsResult
 import com.amazonaws.transform.Unmarshaller
 import com.amazonaws.transform.JsonUnmarshallerContext
+import com.amazonaws.AmazonServiceException
 
 case class KinesisClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "kinesis.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "kinesis"
@@ -77,61 +78,79 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
    *
    * Returns 200 with an empty body on success.
    */
-  def sendCreateStream(aws: CreateStreamRequest): Future[Unit] =
+  def createStream(aws: CreateStreamRequest): Future[Either[AmazonServiceException, Unit]] =
     pipeline(request(aws)).map(response[Unit])
+
+  def sendCreateStream(aws: CreateStreamRequest): Future[Unit] = fold(createStream(aws))
 
   /**
    * Deletes a stream.
    *
    * Returns 200 with an empty body on success.
    */
-  def deleteCreateStream(aws: DeleteStreamRequest): Future[Unit] =
+  def deleteStream(aws: DeleteStreamRequest): Future[Either[AmazonServiceException, Unit]] =
     pipeline(request(aws)).map(response[Unit])
+
+  def sendDeleteStream(aws: DeleteStreamRequest): Future[Unit] = fold(deleteStream(aws))
 
   /**
    * Get metadata about a stream.
    */
-  def describeStream(aws: DescribeStreamRequest): Future[DescribeStreamResult] =
+  def describeStream(aws: DescribeStreamRequest): Future[Either[AmazonServiceException, DescribeStreamResult]] =
     pipeline(request(aws)).map(response[DescribeStreamResult])
+
+  def sendDescribeStream(aws: DescribeStreamRequest): Future[DescribeStreamResult] = fold(describeStream(aws))
 
   /**
    * Get records from a specific shard.  Open the iterator first with getShardIterator.
    */
-  def getRecords(aws: GetRecordsRequest): Future[GetRecordsResult] =
+  def getRecords(aws: GetRecordsRequest): Future[Either[AmazonServiceException, GetRecordsResult]] =
     pipeline(request(aws)).map(response[GetRecordsResult])
+
+  def sendGetRecords(aws: GetRecordsRequest): Future[GetRecordsResult] = fold(getRecords(aws))
 
   /**
    * Opens an iterator onto a specific shard.
    */
-  def getShardIterator(aws: GetShardIteratorRequest): Future[GetShardIteratorResult] =
+  def getShardIterator(aws: GetShardIteratorRequest): Future[Either[AmazonServiceException, GetShardIteratorResult]] =
     pipeline(request(aws)).map(response[GetShardIteratorResult])
+
+  def sendGetShardIterator(aws: GetShardIteratorRequest): Future[GetShardIteratorResult] = fold(getShardIterator(aws))
 
   /**
    * Get list of all streams.
    */
-  def listStreams(aws: ListStreamsRequest): Future[ListStreamsResult] =
+  def listStreams(aws: ListStreamsRequest): Future[Either[AmazonServiceException, ListStreamsResult]] =
     pipeline(request(aws)).map(response[ListStreamsResult])
+
+  def sendListStreams(aws: ListStreamsRequest): Future[ListStreamsResult] = fold(listStreams(aws))
 
   /**
    * Merge two shards.
    *
    * Returns 200 with empty body on success.
    */
-  def mergeShards(aws: MergeShardsRequest): Future[Unit] =
+  def mergeShards(aws: MergeShardsRequest): Future[Either[AmazonServiceException, Unit]] =
     pipeline(request(aws)).map(response[Unit])
+
+  def sendMergeShards(aws: MergeShardsRequest): Future[Unit] = fold(mergeShards(aws))
 
   /**
    * Add a record to a stream.
    */
-  def putRecord(aws: PutRecordRequest): Future[PutRecordResult] =
+  def putRecord(aws: PutRecordRequest): Future[Either[AmazonServiceException, PutRecordResult]] =
     pipeline(request(aws)).map(response[PutRecordResult])
+
+  def sendPutRecord(aws: PutRecordRequest): Future[PutRecordResult] = fold(putRecord(aws))
 
   /**
    * Split a shard into two.
    *
    * Returns 200 with empty body on success.
    */
-  def splitShard(aws: SplitShardRequest): Future[Unit] =
+  def splitShard(aws: SplitShardRequest): Future[Either[AmazonServiceException, Unit]] =
     pipeline(request(aws)).map(response[Unit])
+
+  def sendSplitShard(aws: SplitShardRequest): Future[Unit] = fold(splitShard(aws))
 
 }
