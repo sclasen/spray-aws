@@ -18,6 +18,9 @@ import com.amazonaws.services.kinesis.model.ShardIteratorType
 
 class KinesisClientSpec extends WordSpec with MustMatchers {
 
+  /**
+   * These tests assume that the Kinesis stream named 'unittest_spray_aws' exists
+   */
   val testStreamName = "unittest_spray_aws"
 
   val randomBytes = java.util.UUID.randomUUID.toString.getBytes
@@ -92,6 +95,8 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
         if (n == 0 && (records.isEmpty || nextIterator == null || nextIterator.isEmpty)) {
           return records
         } else {
+          // Otherwise we hit throughput limits on small shards :-(
+          Thread.sleep(50)
           return records ++ readRecords(n - 1, nextIterator)
         }
       }
@@ -101,7 +106,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
 
       // Kinesis has a weird problem where it needs us to loop before it will return records
       val shards = description.getShards
-      val records = shards.flatMap(shard => readRecords(128, shardIterator(shard.getShardId, Some(shard.getSequenceNumberRange.getStartingSequenceNumber))))
+      val records = shards.flatMap(shard => readRecords(32, shardIterator(shard.getShardId, Some(shard.getSequenceNumberRange.getStartingSequenceNumber))))
       records.size() must be > 0
       val added = ByteBuffer.wrap(randomBytes)
       assert(records.exists(added.equals(_)))
