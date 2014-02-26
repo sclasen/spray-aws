@@ -11,12 +11,14 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.services.kinesis.model.ListStreamsRequest
 import com.amazonaws.services.kinesis.model.ListStreamsResult
+import com.amazonaws.transform.Unmarshaller
+import com.amazonaws.transform.JsonUnmarshallerContext
 
 case class KinesisClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "kinesis.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "kinesis"
 }
 
-object MarshallersAndUnmarshallers {
+private object MarshallersAndUnmarshallers {
   implicit val createStreamRequest = new CreateStreamRequestMarshaller()
 
   implicit val deleteStreamRequest = new DeleteStreamRequestMarshaller()
@@ -40,6 +42,8 @@ object MarshallersAndUnmarshallers {
 
   implicit val splitShardRequest = new SplitShardRequestMarshaller()
 
+  implicit val unitResult = UnitUnmarshaller
+
   val kinesisExceptionUnmarshallers: JList[JsonErrorUnmarshaller] = List(
     new InvalidArgumentExceptionUnmarshaller(),
     new LimitExceededExceptionUnmarshaller(),
@@ -49,6 +53,17 @@ object MarshallersAndUnmarshallers {
     new ProvisionedThroughputExceededExceptionUnmarshaller(),
     new JsonErrorUnmarshaller()).toBuffer.asJava
 
+}
+
+/**
+ * Unmarshaller for empty results.
+ *
+ * Like VoidJsonUnmarshaller, but returns a Scala Unit rather than a Java Void/null.
+ */
+private object UnitUnmarshaller extends Unmarshaller[Unit, JsonUnmarshallerContext] {
+  def unmarshall(context: JsonUnmarshallerContext): Unit = {
+    return ;
+  }
 }
 
 class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props) {
@@ -64,16 +79,16 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
    *
    * Returns 200 with an empty body on success.
    */
-  def sendCreateStream(aws: CreateStreamRequest): Future[Void] =
-    pipeline(request(aws)).map({ response[Void](_)(null) })
+  def sendCreateStream(aws: CreateStreamRequest): Future[Unit] =
+    pipeline(request(aws)).map(response[Unit])
 
   /**
    * Deletes a stream.
    *
    * Returns 200 with an empty body on success.
    */
-  def deleteCreateStream(aws: DeleteStreamRequest): Future[Void] =
-    pipeline(request(aws)).map({ response[Void](_)(null) })
+  def deleteCreateStream(aws: DeleteStreamRequest): Future[Unit] =
+    pipeline(request(aws)).map(response[Unit])
 
   /**
    * Get metadata about a stream.
@@ -104,8 +119,8 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
    *
    * Returns 200 with empty body on success.
    */
-  def mergeShards(aws: MergeShardsRequest): Future[Void] =
-    pipeline(request(aws)).map({ response[Void](_)(null) })
+  def mergeShards(aws: MergeShardsRequest): Future[Unit] =
+    pipeline(request(aws)).map(response[Unit])
 
   /**
    * Add a record to a stream.
@@ -118,7 +133,7 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
    *
    * Returns 200 with empty body on success.
    */
-  def splitShard(aws: SplitShardRequest): Future[Void] =
-    pipeline(request(aws)).map({ response[Void](_)(null) })
+  def splitShard(aws: SplitShardRequest): Future[Unit] =
+    pipeline(request(aws)).map(response[Unit])
 
 }
