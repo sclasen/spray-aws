@@ -61,9 +61,7 @@ private object MarshallersAndUnmarshallers {
  * Like VoidJsonUnmarshaller, but returns a Scala Unit rather than a Java Void/null.
  */
 private object UnitUnmarshaller extends Unmarshaller[Unit, JsonUnmarshallerContext] {
-  def unmarshall(context: JsonUnmarshallerContext): Unit = {
-    return ;
-  }
+  def unmarshall(context: JsonUnmarshallerContext): Unit = ()
 }
 
 class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props) {
