@@ -7,7 +7,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.2.4-SNAPSHOT",
+    version := "0.2.4",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
@@ -80,9 +80,9 @@ object Build extends Build {
   def deps = Seq(aws, spray, akka, scalaTest, akka_testkit)
 
   val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile"
-  val spray = "io.spray" % "spray-client" % "1.3-RC1" % "compile"
-  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.0-RC2" % "compile"
-  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.0-RC2" % "test"
+  val spray = "io.spray" % "spray-client" % "1.3.0" % "compile"
+  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.0" % "compile"
+  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.0" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"                 % "2.0" % "test"
 }
 
