@@ -14,8 +14,10 @@ import com.amazonaws.services.kinesis.model.ListStreamsResult
 import com.amazonaws.transform.Unmarshaller
 import com.amazonaws.transform.JsonUnmarshallerContext
 import com.amazonaws.AmazonServiceException
+import com.amazonaws.util.json.JSONObject
+import com.amazonaws.http.{ JsonResponseHandler, JsonErrorResponseHandler }
 
-case class KinesisClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "kinesis.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class KinesisClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "kinesis"
 }
 
@@ -25,27 +27,27 @@ private object MarshallersAndUnmarshallers {
   implicit val deleteStreamRequest = new DeleteStreamRequestMarshaller()
 
   implicit val describeStreamRequest = new DescribeStreamRequestMarshaller()
-  implicit val describeStreamResult = DescribeStreamResultJsonUnmarshaller.getInstance()
+  implicit val describeStreamResult = new JsonResponseHandler(DescribeStreamResultJsonUnmarshaller.getInstance())
 
   implicit val getRecordsRequest = new GetRecordsRequestMarshaller()
-  implicit val getRecordsResult = GetRecordsResultJsonUnmarshaller.getInstance()
+  implicit val getRecordsResult = new JsonResponseHandler(GetRecordsResultJsonUnmarshaller.getInstance())
 
   implicit val getShardIteratorRequest = new GetShardIteratorRequestMarshaller()
-  implicit val getShardIteratorResult = GetShardIteratorResultJsonUnmarshaller.getInstance()
+  implicit val getShardIteratorResult = new JsonResponseHandler(GetShardIteratorResultJsonUnmarshaller.getInstance())
 
   implicit val listStreamsRequest = new ListStreamsRequestMarshaller()
-  implicit val listStreamsResult = ListStreamsResultJsonUnmarshaller.getInstance()
+  implicit val listStreamsResult = new JsonResponseHandler(ListStreamsResultJsonUnmarshaller.getInstance())
 
   implicit val mergeShardsRequest = new MergeShardsRequestMarshaller()
 
   implicit val putRecordsRequest = new PutRecordRequestMarshaller()
-  implicit val putRecordsResult = PutRecordResultJsonUnmarshaller.getInstance()
+  implicit val putRecordsResult = new JsonResponseHandler(PutRecordResultJsonUnmarshaller.getInstance())
 
   implicit val splitShardRequest = new SplitShardRequestMarshaller()
 
-  implicit val unitResult = UnitUnmarshaller
+  implicit val unitResult = new JsonResponseHandler(UnitUnmarshaller)
 
-  val kinesisExceptionUnmarshallers: JList[JsonErrorUnmarshaller] = List(
+  val kinesisExceptionUnmarshallers = List[Unmarshaller[AmazonServiceException, JSONObject]](
     new InvalidArgumentExceptionUnmarshaller(),
     new LimitExceededExceptionUnmarshaller(),
     new ResourceInUseExceptionUnmarshaller(),
@@ -71,7 +73,7 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
 
   val log = props.system.log
 
-  def exceptionUnmarshallers: JList[JsonErrorUnmarshaller] = kinesisExceptionUnmarshallers
+  val errorResponseHandler = new JsonErrorResponseHandler(kinesisExceptionUnmarshallers)
 
   /**
    * Creates a stream.

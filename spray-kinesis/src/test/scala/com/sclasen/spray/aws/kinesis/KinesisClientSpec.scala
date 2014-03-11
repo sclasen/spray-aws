@@ -31,7 +31,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
 
   "A KinesisClient" must {
     "List streams" in {
-      val result = Await.result(client.listStreams(new ListStreamsRequest()), 10 seconds)
+      val result = Await.result(client.sendListStreams(new ListStreamsRequest()), 10 seconds)
       println(result)
       result.getStreamNames.size must be >= 1
     }
@@ -42,14 +42,14 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
       request.setData(buffer)
       request.setPartitionKey("somepartitionkeyvalue")
       request.setStreamName(testStreamName)
-      val result = Await.result(client.putRecord(request), 10 seconds)
+      val result = Await.result(client.sendPutRecord(request), 10 seconds)
       println(result)
       assert(!result.getSequenceNumber.isEmpty)
     }
     "Describe a stream" in {
       val request = new DescribeStreamRequest()
       request.setStreamName(testStreamName)
-      val result = Await.result(client.describeStream(request), 10 seconds)
+      val result = Await.result(client.sendDescribeStream(request), 10 seconds)
       println(result)
       result.getStreamDescription.getShards.size must be > 0
     }
@@ -58,7 +58,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
         {
           val request = new DescribeStreamRequest()
           request.setStreamName(testStreamName)
-          val result = Await.result(client.describeStream(request), 10 seconds)
+          val result = Await.result(client.sendDescribeStream(request), 10 seconds)
           println(result)
           result.getStreamDescription.getShards.size must be > 0
           result.getStreamDescription
@@ -75,7 +75,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
             request.setStartingSequenceNumber(start.get)
           }
           request.setShardId(shardId)
-          val result = Await.result(client.getShardIterator(request), 10 seconds)
+          val result = Await.result(client.sendGetShardIterator(request), 10 seconds)
           println(result)
           assert(result.getShardIterator != null)
           result.getShardIterator
@@ -84,7 +84,7 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
       def readRecords(n: Int, shardIterator: String): List[ByteBuffer] = {
         val request = new GetRecordsRequest()
         request.setShardIterator(shardIterator)
-        val result = Await.result(client.getRecords(request), 10 seconds)
+        val result = Await.result(client.sendGetRecords(request), 10 seconds)
         println(result)
         result.getRecords.foreach(println(_))
 
