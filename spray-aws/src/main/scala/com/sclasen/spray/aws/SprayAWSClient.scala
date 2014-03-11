@@ -7,11 +7,10 @@ import com.amazonaws.auth.{ AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
 import com.amazonaws.util.StringInputStream
 import com.amazonaws.util.json.JSONObject
-import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHandler, JsonResponseHandler, HttpMethodName }
+import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHandler, JsonResponseHandler, HttpMethodName, HttpResponseHandler }
 import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse, DefaultRequest }
-import java.net.URI
+import java.net.{ URLEncoder, URI }
 import java.util.{ List => JList }
-import com.fasterxml.jackson.core.JsonFactory
 import spray.http.HttpProtocols._
 import akka.event.LoggingAdapter
 import spray.can.Http
@@ -52,7 +51,8 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   def log: LoggingAdapter
 
-  def exceptionUnmarshallers: JList[JsonErrorUnmarshaller]
+  def errorResponseHandler: HttpResponseHandler[AmazonServiceException]
+
   val endpointUri = new URI(props.endpoint)
   val port = {
     if (endpointUri.getPort > 0) endpointUri.getPort
@@ -62,7 +62,6 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     }
   }
   val ssl = props.endpoint.startsWith("https")
-  val jsonFactory = new JsonFactory()
   val clientSettings = ClientConnectionSettings(props.system)
 
   def connection = {
@@ -80,32 +79,57 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   val defaultContentType = "application/x-amz-json-1.0"
 
+  /* The AWS signer encodes every part of the URL the same way.
+   * Therefore we need to create the query string here using stricter URL encoding
+   */
+  def awsURLEncode(s: String) = URLEncoder.encode(s, "UTF-8")
+
+  def encodeQuery[T](awsReq: Request[T]) =
+    awsReq.getParameters.asScala.toList.map({
+      case (k, v) => s"${awsURLEncode(k)}=${awsURLEncode(v)}"
+    }).mkString("&")
+
+  def formData[T](awsReq: Request[T]) =
+    HttpEntity(MediaTypes.`application/x-www-form-urlencoded`, encodeQuery(awsReq))
+
   def request[T](t: T)(implicit marshaller: Marshaller[Request[T], T]): HttpRequest = {
     val awsReq = marshaller.marshall(t)
     awsReq.setEndpoint(endpointUri)
     awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader.map(_.value).getOrElse("spray-aws"))
     val contentType = Option(awsReq.getHeaders.get("Content-Type"))
-    val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
     signer.sign(awsReq, credentials)
     awsReq.getHeaders.remove("Host")
     awsReq.getHeaders.remove("User-Agent")
     awsReq.getHeaders.remove("Content-Length")
     awsReq.getHeaders.remove("Content-Type")
     var path: String = awsReq.getResourcePath
-    if (path == "") path = "/"
-    val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
-    val request = HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
+    if (path == "" || path == null) path = "/"
+    val request = if (awsReq.getContent != null) {
+      val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
+      val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
+      HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
+    } else {
+      val method: HttpMethod = awsReq.getHttpMethod
+      method match {
+        case HttpMethods.POST =>
+          Post(path, formData(awsReq)) ~> addHeaders(headers(awsReq))
+        case HttpMethods.PUT =>
+          Put(path, formData(awsReq)) ~> addHeaders(headers(awsReq))
+        case method =>
+          val uri = Uri(path = Uri.Path(path), query = Uri.Query.Raw(encodeQuery(awsReq)))
+          HttpRequest(method, uri, headers(awsReq))
+      }
+    }
     request
   }
 
-  def response[T](response: HttpResponse)(implicit unmarshaller: Unmarshaller[T, JsonUnmarshallerContext]): Either[AmazonServiceException, T] = {
+  def response[T](response: HttpResponse)(implicit handler: HttpResponseHandler[AmazonWebServiceResponse[T]]): Either[AmazonServiceException, T] = {
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
     awsResp.setContent(new StringInputStream(response.entity.asString))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
     if (awsResp.getStatusCode == 200) {
-      val handler = new JsonResponseHandler[T](unmarshaller)
       val handle: AmazonWebServiceResponse[T] = handler.handle(awsResp)
       val resp = handle.getResult
       Right(resp)
@@ -113,7 +137,6 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
       response.headers.foreach {
         h => awsResp.addHeader(h.name, h.value)
       }
-      val errorResponseHandler = new JsonErrorResponseHandler(exceptionUnmarshallers.asInstanceOf[JList[Unmarshaller[AmazonServiceException, JSONObject]]])
       Left(errorResponseHandler.handle(awsResp))
     }
   }
@@ -136,4 +159,3 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   }
 
 }
-

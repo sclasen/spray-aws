@@ -1,14 +1,14 @@
 package com.sclasen.spray.aws.dynamodb
 
 import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.Await
 import concurrent.duration._
 import com.amazonaws.services.dynamodbv2.model.ListTablesRequest
 
-class DynamoDBClientSpec extends WordSpec with MustMatchers {
+class DynamoDBClientSpec extends WordSpec with Matchers {
 
   "A DynamoDBClient" must {
     "List tables" in {
@@ -18,7 +18,7 @@ class DynamoDBClientSpec extends WordSpec with MustMatchers {
       try {
         val result = Await.result(client.sendListTables(new ListTablesRequest()), 100 seconds)
         println(result)
-        result.getTableNames.size() must be > 1
+        result.getTableNames.size() should be >= 1
       } catch {
         case e: Exception =>
           println(e)

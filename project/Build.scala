@@ -10,6 +10,7 @@ object Build extends Build {
     version := "0.2.5-SNAPSHOT",
     scalaVersion := "2.10.2",
     crossScalaVersions := Seq("2.10.2"),
+    scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions", "-language:postfixOps"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
       "spray nightlies" at "http://nightlies.spray.io/",
@@ -28,7 +29,13 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
-  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dyanmodb)
+  val spray_sqs = Project(
+    id = "spray-sqs",
+    base = file("spray-sqs"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
+  ).dependsOn(spray_aws)
+
+  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dyanmodb,spray_sqs)
 
 
   def publishSettings: Seq[Setting[_]] = Seq(
@@ -85,4 +92,3 @@ object Build extends Build {
   val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.0" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"                 % "2.0" % "test"
 }
-
