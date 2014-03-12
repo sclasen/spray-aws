@@ -8,3 +8,10 @@
 
 For high throughput applications you will most certainly want to increase `spray.can.host-connector.max-connections` which defaults
 to only `4`. `400` is the default in the akka-persistence-dynamodb journal which uses this library.
+
+### contributors
+
+thanks 
+
+@justinsb -> spray-kinesis
+@petter-fidesmo -> spray-sqs

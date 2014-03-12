@@ -7,9 +7,9 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.2.5-SNAPSHOT",
-    scalaVersion := "2.10.2",
-    crossScalaVersions := Seq("2.10.2"),
+    version := "0.2.5",
+    scalaVersion := "2.10.3",
+    crossScalaVersions := Seq("2.10.3"),
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions", "-language:postfixOps"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
