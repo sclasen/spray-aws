@@ -4,6 +4,14 @@
 * uses the marshallers and unmarshallers from the aws-java-sdk
 * ~~excludes the httpclient dep from aws-java-sdk, its only needed as 'provided' to compile this project~~ 1.7 aws sdk kills this :(
 
+### serices supported
+
+* dynamodb
+* kinesis
+* sqs
+* route53
+
+
 ### usage
 
 The tests in each module show usage of each client.
