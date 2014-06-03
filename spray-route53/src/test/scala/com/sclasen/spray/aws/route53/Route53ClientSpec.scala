@@ -1,8 +1,28 @@
 package com.sclasen.spray.aws.route53
 
-/**
- * Created by sclasen on 6/3/14.
- */
-class Route53ClientSpec {
+import org.scalatest.{ MustMatchers, WordSpec }
+import akka.actor.ActorSystem
+import akka.util.Timeout
+import concurrent.duration._
+import scala.concurrent.Await
+import com.amazonaws.services.route53.model.{ DeleteHostedZoneRequest, HostedZoneConfig, CreateHostedZoneRequest }
 
+class Route53ClientSpec extends WordSpec with MustMatchers {
+
+  "A Route53Client" must {
+    "Work" in {
+      val system = ActorSystem("test")
+      val props = Route53ClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system)
+      val client = new Route53Client(props)
+      val ref = "testing" + System.currentTimeMillis()
+      val req = new CreateHostedZoneRequest().withName("www.ticktock.com.")
+        .withCallerReference(ref)
+      val result = Await.result(client.sendCreateHostedZone(req), 100 seconds)
+      result.getHostedZone.getName must be("www.ticktock.com.")
+
+      val dreq = new DeleteHostedZoneRequest().withId(result.getHostedZone.getId)
+      val dresult = Await.result(client.sendDeleteHostedZone(dreq), 100 seconds)
+
+    }
+  }
 }

@@ -41,7 +41,14 @@ object Build extends Build {
     settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
-  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dynamodb,spray_kinesis,spray_sqs)
+  val spray_route53 = Project(
+    id = "spray-route53",
+    base = file("spray-route53"),
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
+  ).dependsOn(spray_aws)
+
+
+  val root = Project(id = "spray-aws-project", base = file("."), settings = buildSettings ++ parentSettings).aggregate(spray_aws,spray_dynamodb,spray_kinesis,spray_sqs,spray_route53)
 
 
 

@@ -3,7 +3,7 @@ package com.sclasen.spray.aws
 import akka.actor._
 import akka.io.IO
 import collection.JavaConverters._
-import com.amazonaws.auth.{ AWS4Signer, BasicAWSCredentials }
+import com.amazonaws.auth.{ AbstractAWSSigner, Signer, AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
 import com.amazonaws.util.StringInputStream
 import com.amazonaws.util.json.JSONObject
@@ -74,8 +74,12 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def pipeline(req: HttpRequest) = connection.flatMap(sendReceive(_).apply(req))
 
   val credentials = new BasicAWSCredentials(props.key, props.secret)
-  val signer = new AWS4Signer()
-  signer.setServiceName(props.service)
+
+  lazy val signer: Signer = {
+    val s = new AWS4Signer()
+    s.setServiceName(props.service)
+    s
+  }
 
   val defaultContentType = "application/x-amz-json-1.0"
 
@@ -120,6 +124,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
           HttpRequest(method, uri, headers(awsReq))
       }
     }
+    println(request)
     request
   }
 
@@ -129,7 +134,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     awsResp.setContent(new StringInputStream(response.entity.asString))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
-    if (awsResp.getStatusCode == 200) {
+    if (awsResp.getStatusCode == 200 || awsResp.getStatusCode == 201) {
       val handle: AmazonWebServiceResponse[T] = handler.handle(awsResp)
       val resp = handle.getResult
       Right(resp)
