@@ -124,7 +124,6 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
           HttpRequest(method, uri, headers(awsReq))
       }
     }
-    println(request)
     request
   }
 
