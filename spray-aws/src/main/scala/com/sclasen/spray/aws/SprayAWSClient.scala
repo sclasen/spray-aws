@@ -134,7 +134,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     awsResp.setContent(new StringInputStream(response.entity.asString))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
-    if (awsResp.getStatusCode == 200 || awsResp.getStatusCode == 201) {
+    if (200 <= awsResp.getStatusCode && awsResp.getStatusCode < 300) {
       val handle: AmazonWebServiceResponse[T] = handler.handle(awsResp)
       val resp = handle.getResult
       Right(resp)
