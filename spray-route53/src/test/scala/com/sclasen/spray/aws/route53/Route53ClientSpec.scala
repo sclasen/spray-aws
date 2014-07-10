@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.duration._
 import scala.concurrent.Await
-import com.amazonaws.services.route53.model.{ DeleteHostedZoneRequest, HostedZoneConfig, CreateHostedZoneRequest }
+import com.amazonaws.services.route53.model.{ ListHostedZonesRequest, DeleteHostedZoneRequest, HostedZoneConfig, CreateHostedZoneRequest }
 
 class Route53ClientSpec extends WordSpec with MustMatchers {
 
@@ -19,6 +19,9 @@ class Route53ClientSpec extends WordSpec with MustMatchers {
         .withCallerReference(ref)
       val result = Await.result(client.sendCreateHostedZone(req), 100 seconds)
       result.getHostedZone.getName must be("www.ticktock.com.")
+
+      val list = Await.result(client.sendListHostedZones(new ListHostedZonesRequest()), 10 seconds)
+      list.getHostedZones.size() must be > 1
 
       val dreq = new DeleteHostedZoneRequest().withId(result.getHostedZone.getId)
       val dresult = Await.result(client.sendDeleteHostedZone(dreq), 100 seconds)

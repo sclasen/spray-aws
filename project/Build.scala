@@ -8,7 +8,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.3.2",
+    version := "0.3.3-SNAPSHOT",
     scalaVersion := "2.11.1",
     crossScalaVersions := Seq("2.10.4", "2.11.1"),
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions", "-language:postfixOps"),

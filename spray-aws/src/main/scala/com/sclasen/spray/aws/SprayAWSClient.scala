@@ -17,7 +17,7 @@ import spray.can.Http
 import spray.can.Http._
 import spray.http.HttpHeaders.RawHeader
 import akka.actor.ActorSystem
-import akka.util.Timeout
+import akka.util.{ ByteString, Timeout }
 import spray.http._
 import spray.http.HttpMethods._
 import spray.client.pipelining._
@@ -26,6 +26,7 @@ import scala.concurrent.{ Future, Await }
 import spray.can.client.ClientConnectionSettings
 import scala.util.control.NoStackTrace
 import spray.client.pipelining
+import spray.http.Uri.Query
 
 trait SprayAWSClientProps {
   def operationTimeout: Timeout
@@ -86,7 +87,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   /* The AWS signer encodes every part of the URL the same way.
    * Therefore we need to create the query string here using stricter URL encoding
    */
-  def awsURLEncode(s: String) = URLEncoder.encode(s, "UTF-8")
+  def awsURLEncode(s: String) = Option(s).map(ss => URLEncoder.encode(ss, "UTF-8")).getOrElse("")
 
   def encodeQuery[T](awsReq: Request[T]) =
     awsReq.getParameters.asScala.toList.map({
