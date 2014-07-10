@@ -110,7 +110,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     var path: String = awsReq.getResourcePath
     if (path == "" || path == null) path = "/"
     val request = if (awsReq.getContent != null) {
-      val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
+      val body: Array[Byte] = Stream.continually(awsReq.getContent).takeWhile(-1 != _).map(_.toByte).toArray
       val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
       HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
     } else {
