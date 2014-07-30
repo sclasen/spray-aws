@@ -10,6 +10,7 @@
 * kinesis
 * sqs
 * route53
+* s3
 
 
 ### usage
@@ -38,4 +39,5 @@ thanks
 ```
 @justinsb -> spray-kinesis
 @petter-fidesmo -> spray-sqs
+@slomo -> spray-s3
 ```
