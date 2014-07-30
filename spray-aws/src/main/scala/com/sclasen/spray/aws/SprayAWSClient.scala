@@ -110,7 +110,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     var path: String = awsReq.getResourcePath
     if (path == "" || path == null) path = "/"
     val request = if (awsReq.getContent != null) {
-      val body = awsReq.getContent.asInstanceOf[StringInputStream].getString
+      val body: Array[Byte] = Stream.continually(awsReq.getContent.read).takeWhile(-1 != _).map(_.toByte).toArray
       val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
       HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
     } else {
@@ -134,7 +134,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     awsResp.setContent(new StringInputStream(response.entity.asString))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
-    if (awsResp.getStatusCode == 200 || awsResp.getStatusCode == 201) {
+    if (200 <= awsResp.getStatusCode && awsResp.getStatusCode < 300) {
       val handle: AmazonWebServiceResponse[T] = handler.handle(awsResp)
       val resp = handle.getResult
       Right(resp)
