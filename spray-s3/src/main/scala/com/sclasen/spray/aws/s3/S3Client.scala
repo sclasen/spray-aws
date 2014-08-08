@@ -20,6 +20,7 @@ case class S3ClientProps(key: String, secret: String, operationTimeout: Timeout,
   factory: ActorRefFactory, endpoint: String = "https://s3.amazonaws.com")
     extends SprayAWSClientProps {
   val service = "s3"
+  override val doubleEncodeForSigning = false
 }
 
 object MarshallersAndUnmarshallers {
@@ -38,11 +39,11 @@ object MarshallersAndUnmarshallers {
       request.addHeader("x-amz-content-sha256", "required")
 
       originalRequest.getClass.getMethods.find(_.getName == "getBucketName").map { method =>
-        val bucketName = method.invoke(originalRequest)
-        request.setResourcePath(s"/${bucketName}/")
+        val bucketName: String = method.invoke(originalRequest).asInstanceOf[String]
+        request.setResourcePath(s"/${bucketName}")
 
         originalRequest.getClass.getMethods.find(_.getName == "getKey").map { method =>
-          val key = method.invoke(originalRequest)
+          val key: String = method.invoke(originalRequest).asInstanceOf[String]
           request.setResourcePath(s"/${bucketName}/${key}")
         }
       }

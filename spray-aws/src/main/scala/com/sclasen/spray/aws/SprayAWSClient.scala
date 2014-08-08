@@ -5,12 +5,12 @@ import akka.io.IO
 import collection.JavaConverters._
 import com.amazonaws.auth.{ AbstractAWSSigner, Signer, AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
-import com.amazonaws.util.StringInputStream
 import com.amazonaws.util.json.JSONObject
 import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHandler, JsonResponseHandler, HttpMethodName, HttpResponseHandler }
 import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse, DefaultRequest }
 import java.net.{ URLEncoder, URI }
 import java.util.{ List => JList }
+import java.io.ByteArrayInputStream
 import spray.http.HttpProtocols._
 import akka.event.LoggingAdapter
 import spray.can.Http
@@ -42,6 +42,8 @@ trait SprayAWSClientProps {
   def service: String
 
   def endpoint: String
+
+  def doubleEncodeForSigning: Boolean = true
 }
 
 abstract class SprayAWSClient(props: SprayAWSClientProps) {
@@ -77,7 +79,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   val credentials = new BasicAWSCredentials(props.key, props.secret)
 
   lazy val signer: Signer = {
-    val s = new AWS4Signer()
+    val s = new AWS4Signer(props.doubleEncodeForSigning)
     s.setServiceName(props.service)
     s
   }
@@ -112,7 +114,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     val request = if (awsReq.getContent != null) {
       val body: Array[Byte] = Stream.continually(awsReq.getContent.read).takeWhile(-1 != _).map(_.toByte).toArray
       val mediaType = MediaType.custom(contentType.getOrElse(defaultContentType))
-      HttpRequest(awsReq.getHttpMethod, path, headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
+      HttpRequest(awsReq.getHttpMethod, Uri(path = Uri.Path(path)), headers(awsReq), HttpEntity(mediaType, body), `HTTP/1.1`)
     } else {
       val method: HttpMethod = awsReq.getHttpMethod
       method match {
@@ -131,7 +133,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def response[T](response: HttpResponse)(implicit handler: HttpResponseHandler[AmazonWebServiceResponse[T]]): Either[AmazonServiceException, T] = {
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
-    awsResp.setContent(new StringInputStream(response.entity.asString))
+    awsResp.setContent(new ByteArrayInputStream(response.entity.data.toByteArray))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
     if (200 <= awsResp.getStatusCode && awsResp.getStatusCode < 300) {
