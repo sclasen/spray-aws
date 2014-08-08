@@ -85,7 +85,6 @@ class S3ClientSpec extends WordSpec with Matchers {
       }
 
       "add, list, and get an object containing binary" in { bucketName =>
-
         val objectName = "testObjectBinary"
         val data: Array[Byte] = Array(1, 2, 3, 4, 5, 6, 7, 8)
         val putResult = sync(client.putObject(new PutObjectRequest(bucketName, objectName, new ByteArrayInputStream(data), new ObjectMetadata)))
@@ -99,9 +98,22 @@ class S3ClientSpec extends WordSpec with Matchers {
         listResult.right.get.getObjectSummaries.get(0).getKey shouldEqual objectName
 
         val getResult = sync(client.getObject(new GetObjectRequest(bucketName, objectName)))
+      }
 
+      "put and get and object with umlauts and spaces in the name" in { bucketName =>
+        val objectName = "öbjects näme"
+        val data: Array[Byte] = Array(1, 2, 3, 4, 5, 6, 7, 8)
+        val putResult = sync(client.putObject(new PutObjectRequest(bucketName, objectName, new ByteArrayInputStream(data), new ObjectMetadata)))
+        putResult shouldBe ('right)
+
+        val getResult = sync(client.getObject(new GetObjectRequest(bucketName, objectName)))
         getResult shouldBe ('right)
         streamToBytes(getResult.right.get.getObjectContent) shouldEqual data
+      }
+
+      "get a non-existing object" in { bucketName =>
+        val getResult = sync(client.getObject(new GetObjectRequest(bucketName, "objectName")))
+        getResult shouldBe ('left)
       }
     }
   }
