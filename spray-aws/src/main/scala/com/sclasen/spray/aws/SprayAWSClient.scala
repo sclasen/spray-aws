@@ -42,6 +42,8 @@ trait SprayAWSClientProps {
   def service: String
 
   def endpoint: String
+
+  def doubleEncodeForSigning: Boolean = true
 }
 
 abstract class SprayAWSClient(props: SprayAWSClientProps) {
@@ -77,7 +79,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   val credentials = new BasicAWSCredentials(props.key, props.secret)
 
   lazy val signer: Signer = {
-    val s = new AWS4Signer()
+    val s = new AWS4Signer(props.doubleEncodeForSigning)
     s.setServiceName(props.service)
     s
   }
