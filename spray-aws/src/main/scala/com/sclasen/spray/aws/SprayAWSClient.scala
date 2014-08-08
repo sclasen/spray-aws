@@ -5,12 +5,12 @@ import akka.io.IO
 import collection.JavaConverters._
 import com.amazonaws.auth.{ AbstractAWSSigner, Signer, AWS4Signer, BasicAWSCredentials }
 import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
-import com.amazonaws.util.StringInputStream
 import com.amazonaws.util.json.JSONObject
 import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHandler, JsonResponseHandler, HttpMethodName, HttpResponseHandler }
 import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse, DefaultRequest }
 import java.net.{ URLEncoder, URI }
 import java.util.{ List => JList }
+import java.io.ByteArrayInputStream
 import spray.http.HttpProtocols._
 import akka.event.LoggingAdapter
 import spray.can.Http
@@ -133,7 +133,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   def response[T](response: HttpResponse)(implicit handler: HttpResponseHandler[AmazonWebServiceResponse[T]]): Either[AmazonServiceException, T] = {
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
-    awsResp.setContent(new StringInputStream(response.entity.asString))
+    awsResp.setContent(new ByteArrayInputStream(response.entity.data.toByteArray))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
     if (200 <= awsResp.getStatusCode && awsResp.getStatusCode < 300) {
