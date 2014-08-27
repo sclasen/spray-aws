@@ -1,16 +1,16 @@
 package com.sclasen.spray.aws.kinesis
 
-import java.util.{List => JList}
+import java.util.{ List => JList }
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.{ ActorRefFactory, ActorSystem }
 import akka.util.Timeout
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.auth.{AWSCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.http.{JsonErrorResponseHandler, JsonResponseHandler}
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
+import com.amazonaws.http.{ JsonErrorResponseHandler, JsonResponseHandler }
 import com.amazonaws.internal.StaticCredentialsProvider
-import com.amazonaws.services.kinesis.model.{ListStreamsRequest, ListStreamsResult, _}
+import com.amazonaws.services.kinesis.model.{ ListStreamsRequest, ListStreamsResult, _ }
 import com.amazonaws.services.kinesis.model.transform._
-import com.amazonaws.transform.{JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller}
+import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller }
 import com.sclasen.spray.aws._
 
 import scala.collection.JavaConverters._

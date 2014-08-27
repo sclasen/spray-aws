@@ -1,7 +1,7 @@
 package com.sclasen.spray.aws.sqs
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
-import com.amazonaws.auth.{AWSCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.internal.StaticCredentialsProvider
 
 import org.w3c.dom.Node

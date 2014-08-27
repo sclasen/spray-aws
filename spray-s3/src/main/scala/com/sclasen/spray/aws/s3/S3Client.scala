@@ -1,13 +1,13 @@
 package com.sclasen.spray.aws.s3
 
-import java.util.{List => JList}
+import java.util.{ List => JList }
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.{ ActorRefFactory, ActorSystem }
 import akka.util.Timeout
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.auth.{AWSCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.internal.StaticCredentialsProvider
-import com.amazonaws.services.s3.internal.{S3ErrorResponseHandler, S3MetadataResponseHandler, S3ObjectResponseHandler}
+import com.amazonaws.services.s3.internal.{ S3ErrorResponseHandler, S3MetadataResponseHandler, S3ObjectResponseHandler }
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.model.transform.Unmarshallers
 import com.sclasen.spray.aws._
@@ -30,9 +30,9 @@ object S3ClientProps {
 object MarshallersAndUnmarshallers {
 
   import com.amazonaws.http.HttpMethodName
-  import com.amazonaws.services.s3.internal.{Constants, S3XmlResponseHandler}
+  import com.amazonaws.services.s3.internal.{ Constants, S3XmlResponseHandler }
   import com.amazonaws.transform.Marshaller
-  import com.amazonaws.{AmazonWebServiceRequest, DefaultRequest, Request}
+  import com.amazonaws.{ AmazonWebServiceRequest, DefaultRequest, Request }
 
   class S3Marshaller[X <: AmazonWebServiceRequest](httpMethod: HttpMethodName)
       extends Marshaller[Request[X], X] {

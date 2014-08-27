@@ -17,7 +17,7 @@ import spray.http.HttpResponse
 import com.amazonaws.services.route53.internal.Route53IdRequestHandler
 import com.amazonaws.util.TimingInfo
 import scala.reflect.ClassTag
-import com.amazonaws.auth.{AWSCredentialsProvider, BasicAWSCredentials, AWS3Signer, Signer}
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials, AWS3Signer, Signer }
 import com.amazonaws.services.s3.internal.AWSS3V4Signer
 
 case class Route53ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
