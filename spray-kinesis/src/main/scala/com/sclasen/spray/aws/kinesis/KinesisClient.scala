@@ -47,7 +47,7 @@ private object MarshallersAndUnmarshallers {
 
   implicit val unitResult = new JsonResponseHandler(UnitUnmarshaller)
 
-  val kinesisExceptionUnmarshallers = List[Unmarshaller[AmazonServiceException, JSONObject]](
+  val kinesisExceptionUnmarshallers = List[JsonErrorUnmarshaller](
     new InvalidArgumentExceptionUnmarshaller(),
     new LimitExceededExceptionUnmarshaller(),
     new ResourceInUseExceptionUnmarshaller(),

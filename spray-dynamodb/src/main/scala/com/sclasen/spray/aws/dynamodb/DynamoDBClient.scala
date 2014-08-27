@@ -1,6 +1,7 @@
 package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import com.amazonaws.auth.AWSCredentialsProvider
 import collection.JavaConverters._
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.model.transform._
@@ -45,7 +46,7 @@ object MarshallersAndUnmarshallers {
   implicit val getM = new GetItemRequestMarshaller()
   implicit val getU = new JsonResponseHandler(GetItemResultJsonUnmarshaller.getInstance())
 
-  val dynamoExceptionUnmarshallers = List[Unmarshaller[AmazonServiceException, JSONObject]](
+  val dynamoExceptionUnmarshallers = List[JsonErrorUnmarshaller](
     new LimitExceededExceptionUnmarshaller(),
     new InternalServerErrorExceptionUnmarshaller(),
     new ProvisionedThroughputExceededExceptionUnmarshaller(),
@@ -56,7 +57,7 @@ object MarshallersAndUnmarshallers {
 
 }
 
-class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(props) {
+class DynamoDBClient(val props: DynamoDBClientProps, overrideCredentialsProvider: Option[AWSCredentialsProvider] = None) extends SprayAWSClient(props, overrideCredentialsProvider) {
 
   import MarshallersAndUnmarshallers._
 
