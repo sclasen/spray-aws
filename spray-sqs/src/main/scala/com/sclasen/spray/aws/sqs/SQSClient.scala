@@ -24,7 +24,7 @@ case class SQSClientProps(credentialsProvider: AWSCredentialsProvider, operation
 }
 
 object SQSClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") =
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://sqs.us-east-1.amazonaws.com") =
     new SQSClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 

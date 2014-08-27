@@ -25,7 +25,7 @@ case class Route53ClientProps(credentialsProvider: AWSCredentialsProvider, opera
 }
 
 object Route53ClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") =
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://route53.amazonaws.com") =
     new Route53ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 

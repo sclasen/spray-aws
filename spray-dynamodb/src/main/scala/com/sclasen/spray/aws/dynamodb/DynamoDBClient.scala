@@ -1,7 +1,8 @@
 package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
-import com.amazonaws.auth.AWSCredentialsProvider
+import com.amazonaws.auth.{ BasicAWSCredentials, AWSCredentialsProvider }
+import com.amazonaws.internal.StaticCredentialsProvider
 import collection.JavaConverters._
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.model.transform._
@@ -14,8 +15,13 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
   val service = "dynamodb"
+}
+
+object DynamoDBClientProps {
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") =
+    new DynamoDBClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
 object MarshallersAndUnmarshallers {

@@ -23,7 +23,7 @@ case class S3ClientProps(credentialsProvider: AWSCredentialsProvider, operationT
 }
 
 object S3ClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") =
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://s3.amazonaws.com") =
     new S3ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
