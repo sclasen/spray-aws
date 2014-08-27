@@ -1,7 +1,7 @@
 package com.sclasen.spray.aws.kinesis
 
 import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.Await
@@ -14,7 +14,6 @@ import com.amazonaws.services.kinesis.model.GetRecordsRequest
 import com.amazonaws.services.kinesis.model.GetShardIteratorRequest
 import com.amazonaws.services.kinesis.model.ShardIteratorType._
 import scala.collection.JavaConversions._
-import com.amazonaws.services.kinesis.model.ShardIteratorType
 
 class KinesisClientSpec extends WordSpec with MustMatchers {
 

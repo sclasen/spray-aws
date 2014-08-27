@@ -14,7 +14,7 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
   val service = "dynamodb"
 }
 
@@ -57,7 +57,7 @@ object MarshallersAndUnmarshallers {
 
 }
 
-class DynamoDBClient(val props: DynamoDBClientProps, overrideCredentialsProvider: Option[AWSCredentialsProvider] = None) extends SprayAWSClient(props, overrideCredentialsProvider) {
+class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(props) {
 
   import MarshallersAndUnmarshallers._
 

@@ -1,19 +1,18 @@
 package com.sclasen.spray.aws
 
 import java.io.ByteArrayInputStream
-import java.net.{URI, URLEncoder}
-import java.util.{List => JList}
+import java.net.{ URI, URLEncoder }
+import java.util.{ List => JList }
 
-import akka.actor.{ActorSystem, _}
+import akka.actor.{ ActorSystem, _ }
 import akka.event.LoggingAdapter
 import akka.io.IO
 import akka.pattern._
 import akka.util.Timeout
 import com.amazonaws.auth._
-import com.amazonaws.http.{HttpMethodName, HttpResponseHandler, HttpResponse => AWSHttpResponse}
-import com.amazonaws.internal.StaticCredentialsProvider
+import com.amazonaws.http.{ HttpMethodName, HttpResponseHandler, HttpResponse => AWSHttpResponse }
 import com.amazonaws.transform.Marshaller
-import com.amazonaws.{AmazonServiceException, AmazonWebServiceResponse, DefaultRequest, Request}
+import com.amazonaws.{ AmazonServiceException, AmazonWebServiceResponse, DefaultRequest, Request }
 import spray.can.Http
 import spray.can.Http._
 import spray.can.client.ClientConnectionSettings
@@ -29,9 +28,7 @@ import scala.concurrent.Future
 trait SprayAWSClientProps {
   def operationTimeout: Timeout
 
-  def key: String
-
-  def secret: String
+  def credentialsProvider: AWSCredentialsProvider
 
   def system: ActorSystem
 
@@ -44,7 +41,7 @@ trait SprayAWSClientProps {
   def doubleEncodeForSigning: Boolean = true
 }
 
-abstract class SprayAWSClient(props: SprayAWSClientProps, overrideCredentialsProvider: Option[AWSCredentialsProvider] = None) {
+abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   implicit val timeout = props.operationTimeout
 
@@ -74,8 +71,6 @@ abstract class SprayAWSClient(props: SprayAWSClientProps, overrideCredentialsPro
 
   def pipeline(req: HttpRequest) = connection.flatMap(sendReceive(_).apply(req))
 
-  val credentialsProvider = overrideCredentialsProvider.getOrElse(new StaticCredentialsProvider(new BasicAWSCredentials(props.key, props.secret)))
-
   lazy val signer: Signer = {
     val s = new AWS4Signer(props.doubleEncodeForSigning)
     s.setServiceName(props.service)
@@ -102,7 +97,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps, overrideCredentialsPro
     awsReq.setEndpoint(endpointUri)
     awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader.map(_.value).getOrElse("spray-aws"))
     val contentType = Option(awsReq.getHeaders.get("Content-Type"))
-    signer.sign(awsReq, credentialsProvider.getCredentials())
+    signer.sign(awsReq, props.credentialsProvider.getCredentials())
     awsReq.getHeaders.remove("Host")
     awsReq.getHeaders.remove("User-Agent")
     awsReq.getHeaders.remove("Content-Length")

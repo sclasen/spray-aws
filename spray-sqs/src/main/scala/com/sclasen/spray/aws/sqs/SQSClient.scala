@@ -1,6 +1,8 @@
 package com.sclasen.spray.aws.sqs
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import com.amazonaws.auth.{AWSCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.internal.StaticCredentialsProvider
 
 import org.w3c.dom.Node
 
@@ -17,8 +19,13 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class SQSClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://sqs.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class SQSClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
   val service = "sqs"
+}
+
+object SQSClientProps {
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") =
+    new SQSClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
