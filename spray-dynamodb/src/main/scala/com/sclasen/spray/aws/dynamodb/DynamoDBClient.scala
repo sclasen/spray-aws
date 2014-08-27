@@ -6,9 +6,8 @@ import com.amazonaws.internal.StaticCredentialsProvider
 import collection.JavaConverters._
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.model.transform._
-import com.amazonaws.transform.{ JsonErrorUnmarshaller, Unmarshaller }
+import com.amazonaws.transform.{ JsonErrorUnmarshaller }
 import com.amazonaws.http.{ JsonErrorResponseHandler, JsonResponseHandler }
-import com.amazonaws.util.json.JSONObject
 import concurrent.Future
 import java.util.{ List => JList }
 import akka.util.Timeout
@@ -20,7 +19,8 @@ case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, oper
 }
 
 object DynamoDBClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") =
+  val defaultEndpoint = "https://dynamodb.us-east-1.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
     new DynamoDBClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 

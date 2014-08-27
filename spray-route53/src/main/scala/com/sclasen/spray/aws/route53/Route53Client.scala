@@ -13,19 +13,17 @@ import com.amazonaws.services.route53.model._
 import com.amazonaws.http.{ StaxResponseHandler, DefaultErrorResponseHandler, HttpResponseHandler }
 import com.amazonaws.services.route53.model.{ ChangeResourceRecordSetsResult, ChangeResourceRecordSetsRequest }
 import scala.concurrent.Future
-import spray.http.HttpResponse
 import com.amazonaws.services.route53.internal.Route53IdRequestHandler
 import com.amazonaws.util.TimingInfo
-import scala.reflect.ClassTag
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials, AWS3Signer, Signer }
-import com.amazonaws.services.s3.internal.AWSS3V4Signer
 
 case class Route53ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
   val service = "route53"
 }
 
 object Route53ClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://route53.amazonaws.com") =
+  val defaultEndpoint = "https://route53.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
     new Route53ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 

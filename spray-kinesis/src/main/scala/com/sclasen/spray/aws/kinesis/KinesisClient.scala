@@ -21,7 +21,8 @@ case class KinesisClientProps(credentialsProvider: AWSCredentialsProvider, opera
 }
 
 object KinesisClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") =
+  val defaultEndpoint = "https://kinesis.us-east-1.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
     new KinesisClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 

@@ -11,7 +11,6 @@ import com.amazonaws.services.sqs.model._
 import com.amazonaws.services.sqs.model.transform._
 import com.amazonaws.transform.StandardErrorUnmarshaller
 import com.amazonaws.transform.{ VoidStaxUnmarshaller, Unmarshaller }
-import com.amazonaws.AmazonServiceException
 import com.amazonaws.http.{ StaxResponseHandler, DefaultErrorResponseHandler }
 
 import concurrent.Future
@@ -24,7 +23,8 @@ case class SQSClientProps(credentialsProvider: AWSCredentialsProvider, operation
 }
 
 object SQSClientProps {
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://sqs.us-east-1.amazonaws.com") =
+  val defaultEndpoint = "https://sqs.us-east-1.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
     new SQSClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
