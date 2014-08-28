@@ -8,9 +8,9 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.3.5-SNAPSHOT",
-    scalaVersion := "2.11.1",
-    crossScalaVersions := Seq("2.10.4", "2.11.1"),
+    version := "0.3.6-SNAPSHOT",
+    scalaVersion := "2.11.2",
+    crossScalaVersions := Seq("2.10.4", "2.11.2"),
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions", "-language:postfixOps"),
     resolvers ++= Seq("TypesafeMaven" at "http://repo.typesafe.com/typesafe/maven-releases",
       "whydoineedthis" at "http://repo.typesafe.com/typesafe/releases",
@@ -110,12 +110,13 @@ object Build extends Build {
   def spray:Seq[Setting[Seq[ModuleID]]] = Seq(libraryDependencies <+= scalaVersion(sprayDependency(_)))
 
   def sprayDependency(scalaVersion: String) = scalaVersion match {
-    case "2.10.4" => "io.spray" % "spray-client" % "1.3.1" % "compile"
-    case "2.11.1" => "io.spray" % "spray-client_2.11" % "1.3.1-20140423" % "compile"
+    case "2.10.4" => "io.spray" % "spray-client" % "1.3.2-20140428" % "compile"
+    case "2.11.2" => "io.spray" % "spray-client_2.11" % "1.3.1-20140423" % "compile"
   }
 
-  val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile"
-  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.3" % "compile"
-  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.3" % "test"
-  val scalaTest   = "org.scalatest"     %% "scalatest"   % "2.1.7" % "test"
+  val aws = "com.amazonaws" % "aws-java-sdk" % "1.8.9.1" % "compile"
+  //val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile"
+  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.5" % "compile"
+  val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.5" % "test"
+  val scalaTest   = "org.scalatest"     %% "scalatest"   % "2.2.1" % "test"
 }

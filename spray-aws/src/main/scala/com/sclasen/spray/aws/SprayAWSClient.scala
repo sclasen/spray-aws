@@ -1,39 +1,34 @@
 package com.sclasen.spray.aws
 
-import akka.actor._
-import akka.io.IO
-import collection.JavaConverters._
-import com.amazonaws.auth.{ AbstractAWSSigner, Signer, AWS4Signer, BasicAWSCredentials }
-import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller, Marshaller }
-import com.amazonaws.util.json.JSONObject
-import com.amazonaws.http.{ HttpResponse => AWSHttpResponse, JsonErrorResponseHandler, JsonResponseHandler, HttpMethodName, HttpResponseHandler }
-import com.amazonaws.{ AmazonServiceException, Request, AmazonWebServiceResponse, DefaultRequest }
-import java.net.{ URLEncoder, URI }
-import java.util.{ List => JList }
 import java.io.ByteArrayInputStream
-import spray.http.HttpProtocols._
+import java.net.{ URI, URLEncoder }
+import java.util.{ List => JList }
+
+import akka.actor.{ ActorSystem, _ }
 import akka.event.LoggingAdapter
+import akka.io.IO
+import akka.pattern._
+import akka.util.Timeout
+import com.amazonaws.auth._
+import com.amazonaws.http.{ HttpMethodName, HttpResponseHandler, HttpResponse => AWSHttpResponse }
+import com.amazonaws.transform.Marshaller
+import com.amazonaws.{ AmazonServiceException, AmazonWebServiceResponse, DefaultRequest, Request }
 import spray.can.Http
 import spray.can.Http._
-import spray.http.HttpHeaders.RawHeader
-import akka.actor.ActorSystem
-import akka.util.{ ByteString, Timeout }
-import spray.http._
-import spray.http.HttpMethods._
-import spray.client.pipelining._
-import akka.pattern._
-import scala.concurrent.{ Future, Await }
 import spray.can.client.ClientConnectionSettings
-import scala.util.control.NoStackTrace
-import spray.client.pipelining
-import spray.http.Uri.Query
+import spray.client.pipelining._
+import spray.http.HttpHeaders.RawHeader
+import spray.http.HttpMethods._
+import spray.http.HttpProtocols._
+import spray.http._
+
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
 
 trait SprayAWSClientProps {
   def operationTimeout: Timeout
 
-  def key: String
-
-  def secret: String
+  def credentialsProvider: AWSCredentialsProvider
 
   def system: ActorSystem
 
@@ -76,8 +71,6 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   def pipeline(req: HttpRequest) = connection.flatMap(sendReceive(_).apply(req))
 
-  val credentials = new BasicAWSCredentials(props.key, props.secret)
-
   lazy val signer: Signer = {
     val s = new AWS4Signer(props.doubleEncodeForSigning)
     s.setServiceName(props.service)
@@ -104,7 +97,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     awsReq.setEndpoint(endpointUri)
     awsReq.getHeaders.put("User-Agent", clientSettings.userAgentHeader.map(_.value).getOrElse("spray-aws"))
     val contentType = Option(awsReq.getHeaders.get("Content-Type"))
-    signer.sign(awsReq, credentials)
+    signer.sign(awsReq, props.credentialsProvider.getCredentials())
     awsReq.getHeaders.remove("Host")
     awsReq.getHeaders.remove("User-Agent")
     awsReq.getHeaders.remove("Content-Length")

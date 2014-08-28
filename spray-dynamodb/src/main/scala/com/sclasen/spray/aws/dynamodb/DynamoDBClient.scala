@@ -1,20 +1,27 @@
 package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import com.amazonaws.auth.{ BasicAWSCredentials, AWSCredentialsProvider }
+import com.amazonaws.internal.StaticCredentialsProvider
 import collection.JavaConverters._
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.model.transform._
-import com.amazonaws.transform.{ JsonErrorUnmarshaller, Unmarshaller }
+import com.amazonaws.transform.{ JsonErrorUnmarshaller }
 import com.amazonaws.http.{ JsonErrorResponseHandler, JsonResponseHandler }
-import com.amazonaws.util.json.JSONObject
 import concurrent.Future
 import java.util.{ List => JList }
 import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class DynamoDBClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://dynamodb.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
   val service = "dynamodb"
+}
+
+object DynamoDBClientProps {
+  val defaultEndpoint = "https://dynamodb.us-east-1.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
+    new DynamoDBClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
@@ -45,7 +52,7 @@ object MarshallersAndUnmarshallers {
   implicit val getM = new GetItemRequestMarshaller()
   implicit val getU = new JsonResponseHandler(GetItemResultJsonUnmarshaller.getInstance())
 
-  val dynamoExceptionUnmarshallers = List[Unmarshaller[AmazonServiceException, JSONObject]](
+  val dynamoExceptionUnmarshallers = List[JsonErrorUnmarshaller](
     new LimitExceededExceptionUnmarshaller(),
     new InternalServerErrorExceptionUnmarshaller(),
     new ProvisionedThroughputExceededExceptionUnmarshaller(),

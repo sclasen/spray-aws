@@ -1,24 +1,29 @@
 package com.sclasen.spray.aws.kinesis
 
-import akka.actor.{ ActorRefFactory, ActorSystem }
-import collection.JavaConverters._
-import com.amazonaws.services.kinesis.model._
-import com.amazonaws.services.kinesis.model.transform._
-import com.amazonaws.transform.JsonErrorUnmarshaller
-import concurrent.Future
 import java.util.{ List => JList }
-import akka.util.Timeout
-import com.sclasen.spray.aws._
-import com.amazonaws.services.kinesis.model.ListStreamsRequest
-import com.amazonaws.services.kinesis.model.ListStreamsResult
-import com.amazonaws.transform.Unmarshaller
-import com.amazonaws.transform.JsonUnmarshallerContext
-import com.amazonaws.AmazonServiceException
-import com.amazonaws.util.json.JSONObject
-import com.amazonaws.http.{ JsonResponseHandler, JsonErrorResponseHandler }
 
-case class KinesisClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = "https://kinesis.us-east-1.amazonaws.com") extends SprayAWSClientProps {
+import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.util.Timeout
+import com.amazonaws.AmazonServiceException
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
+import com.amazonaws.http.{ JsonErrorResponseHandler, JsonResponseHandler }
+import com.amazonaws.internal.StaticCredentialsProvider
+import com.amazonaws.services.kinesis.model.{ ListStreamsRequest, ListStreamsResult, _ }
+import com.amazonaws.services.kinesis.model.transform._
+import com.amazonaws.transform.{ JsonErrorUnmarshaller, JsonUnmarshallerContext, Unmarshaller }
+import com.sclasen.spray.aws._
+
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
+
+case class KinesisClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
   val service = "kinesis"
+}
+
+object KinesisClientProps {
+  val defaultEndpoint = "https://kinesis.us-east-1.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
+    new KinesisClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
 }
 
 private object MarshallersAndUnmarshallers {
@@ -47,7 +52,7 @@ private object MarshallersAndUnmarshallers {
 
   implicit val unitResult = new JsonResponseHandler(UnitUnmarshaller)
 
-  val kinesisExceptionUnmarshallers = List[Unmarshaller[AmazonServiceException, JSONObject]](
+  val kinesisExceptionUnmarshallers = List[JsonErrorUnmarshaller](
     new InvalidArgumentExceptionUnmarshaller(),
     new LimitExceededExceptionUnmarshaller(),
     new ResourceInUseExceptionUnmarshaller(),
@@ -69,7 +74,7 @@ private object UnitUnmarshaller extends Unmarshaller[Unit, JsonUnmarshallerConte
 
 class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props) {
 
-  import MarshallersAndUnmarshallers._
+  import com.sclasen.spray.aws.kinesis.MarshallersAndUnmarshallers._
 
   val log = props.system.log
 

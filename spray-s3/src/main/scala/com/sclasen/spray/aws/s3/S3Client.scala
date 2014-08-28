@@ -1,35 +1,39 @@
 package com.sclasen.spray.aws.s3
 
 import java.util.{ List => JList }
-import java.io.ByteArrayInputStream
-import scala.concurrent.Future
-import scala.collection.JavaConverters._
 
-import akka.util.Timeout
 import akka.actor.{ ActorRefFactory, ActorSystem }
-
+import akka.util.Timeout
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.http.HttpResponseHandler
+import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
+import com.amazonaws.internal.StaticCredentialsProvider
+import com.amazonaws.services.s3.internal.{ S3ErrorResponseHandler, S3MetadataResponseHandler, S3ObjectResponseHandler }
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.model.transform.Unmarshallers
-import com.amazonaws.services.s3.internal.{ S3ErrorResponseHandler, S3ObjectResponseHandler, S3MetadataResponseHandler }
-
 import com.sclasen.spray.aws._
 
-case class S3ClientProps(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem,
-  factory: ActorRefFactory, endpoint: String = "https://s3.amazonaws.com")
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
+
+case class S3ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem,
+  factory: ActorRefFactory, endpoint: String)
     extends SprayAWSClientProps {
   val service = "s3"
   override val doubleEncodeForSigning = false
 }
 
+object S3ClientProps {
+  val defaultEndpoint = "https://s3.amazonaws.com"
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
+    new S3ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+}
+
 object MarshallersAndUnmarshallers {
 
-  import com.amazonaws.transform.{ Marshaller, Unmarshaller }
-  import com.amazonaws.{ DefaultRequest, Request }
-  import com.amazonaws.services.s3.internal.{ Constants, S3XmlResponseHandler }
-  import com.amazonaws.{ AmazonWebServiceRequest, AmazonWebServiceResponse }
   import com.amazonaws.http.HttpMethodName
+  import com.amazonaws.services.s3.internal.{ Constants, S3XmlResponseHandler }
+  import com.amazonaws.transform.Marshaller
+  import com.amazonaws.{ AmazonWebServiceRequest, DefaultRequest, Request }
 
   class S3Marshaller[X <: AmazonWebServiceRequest](httpMethod: HttpMethodName)
       extends Marshaller[Request[X], X] {
@@ -110,7 +114,7 @@ object MarshallersAndUnmarshallers {
 
 class S3Client(val props: S3ClientProps) extends SprayAWSClient(props) {
 
-  import MarshallersAndUnmarshallers._
+  import com.sclasen.spray.aws.s3.MarshallersAndUnmarshallers._
 
   val log = props.system.log
   def errorResponseHandler = new S3ErrorResponseHandler
