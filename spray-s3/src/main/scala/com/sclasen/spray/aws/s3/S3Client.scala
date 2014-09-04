@@ -8,6 +8,7 @@ import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.internal.StaticCredentialsProvider
 import com.amazonaws.services.s3.internal.{ S3ErrorResponseHandler, S3MetadataResponseHandler, S3ObjectResponseHandler }
+import com.amazonaws.services.s3.Headers
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.model.transform.Unmarshallers
 import com.sclasen.spray.aws._
@@ -69,6 +70,13 @@ object MarshallersAndUnmarshallers {
       if (Option(putObject.getFile).isDefined) {
         throw new Exception("File upload not supported")
       } else {
+        import scala.collection.JavaConversions._
+        request.getHeaders.putAll(putObject.getMetadata.getRawMetadata.map { case (k, v) => k -> v.toString })
+        request.getHeaders.putAll(putObject.getMetadata.getUserMetadata.map { case (k, v) => s"${Headers.S3_USER_METADATA_PREFIX}-$k" -> v })
+        Option(putObject.getRedirectLocation).foreach(request.getHeaders.put(Headers.REDIRECT_LOCATION, _))
+        Option(putObject.getStorageClass).foreach(request.getHeaders.put(Headers.STORAGE_CLASS, _))
+        Option(putObject.getCannedAcl).foreach(acl => request.getHeaders.put(Headers.S3_CANNED_ACL, acl.toString))
+        // TODO, handle putObject.getAccessControlList, cf: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html
         request.setContent(putObject.getInputStream)
         request
       }
@@ -81,27 +89,11 @@ object MarshallersAndUnmarshallers {
   implicit val listObjectsM = new S3Marshaller[ListObjectsRequest](HttpMethodName.GET) {
     override def marshall(listObjects: ListObjectsRequest): Request[ListObjectsRequest] = {
       val request = super.marshall(listObjects)
-
-      Option(listObjects.getPrefix).map { prefix =>
-        request.addParameter("prefix", prefix)
-      }
-
-      Option(listObjects.getMarker).map { marker =>
-        request.addParameter("marker", marker)
-      }
-
-      Option(listObjects.getDelimiter).map { delimiter =>
-        request.addParameter("delimiter", delimiter)
-      }
-
-      Option(listObjects.getMaxKeys).map { maxKeys =>
-        request.addParameter("max-keys", maxKeys.toString)
-      }
-
-      Option(listObjects.getEncodingType).map { encodingType =>
-        request.addParameter("encoding-type", encodingType)
-      }
-
+      Option(listObjects.getPrefix).foreach(request.addParameter("prefix", _))
+      Option(listObjects.getMarker).foreach(request.addParameter("marker", _))
+      Option(listObjects.getDelimiter).foreach(request.addParameter("delimiter", _))
+      Option(listObjects.getMaxKeys).foreach(maxKeys => request.addParameter("max-keys", maxKeys.toString))
+      Option(listObjects.getEncodingType).foreach(request.addParameter("encoding-type", _))
       request
     }
   }
