@@ -156,6 +156,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     case HttpMethodName.PUT => PUT
     case HttpMethodName.DELETE => DELETE
     case HttpMethodName.HEAD => HEAD
+    case HttpMethodName.PATCH => PATCH
   }
 
 }
