@@ -132,9 +132,4 @@ class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(prop
   def deleteItem(awsDel: DeleteItemRequest): Future[Either[AmazonServiceException, DeleteItemResult]] =
     pipeline(request(awsDel)).map(response[DeleteItemResult])
 
-  def sendScan(awsScanRequest: ScanRequest): Future[ScanResult] = fold(scan(awsScanRequest))
-
-  def scan(awsScanRequest: ScanRequest): Future[Either[AmazonServiceException, ScanResult]] =
-    pipeline(request(awsScanRequest)).map(response[ScanResult])
-
 }
