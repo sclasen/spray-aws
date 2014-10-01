@@ -37,8 +37,6 @@ object MarshallersAndUnmarshallers {
   implicit val listU = new JsonResponseHandler(ListTablesResultJsonUnmarshaller.getInstance())
   implicit val qM = new QueryRequestMarshaller()
   implicit val qU = new JsonResponseHandler(QueryResultJsonUnmarshaller.getInstance())
-  implicit val scanM = new ScanRequestMarshaller()
-  implicit val scanU = new JsonResponseHandler(ScanResultJsonUnmarshaller.getInstance())
   implicit val uM = new UpdateItemRequestMarshaller()
   implicit val uU = new JsonResponseHandler(UpdateItemResultJsonUnmarshaller.getInstance())
   implicit val dM = new DescribeTableRequestMarshaller()
@@ -85,7 +83,7 @@ class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(prop
 
   def sendScan(aws: ScanRequest): Future[ScanResult] = fold(scan(aws))
 
-  def scan(aws: ScanRequest): Future[Either[AmazonServiceException, ScanResult]] = 
+  def scan(aws: ScanRequest): Future[Either[AmazonServiceException, ScanResult]] =
     pipeline(request(aws)).map(response[ScanResult])
 
   def sendUpdateItem(aws: UpdateItemRequest): Future[UpdateItemResult] = fold(updateItem(aws))
