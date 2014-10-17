@@ -21,37 +21,37 @@ object Build extends Build {
   val spray_aws = Project(
     id = "spray-aws",
     base = file("spray-aws"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   )
 
   val spray_dynamodb = Project(
     id = "spray-dynamodb",
     base = file("spray-dynamodb"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
   val spray_sqs = Project(
     id = "spray-sqs",
     base = file("spray-sqs"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
   val spray_kinesis = Project(
     id = "spray-kinesis",
     base = file("spray-kinesis"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
   val spray_route53 = Project(
     id = "spray-route53",
     base = file("spray-route53"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
   val spray_s3 = Project(
     id = "spray-s3",
     base = file("spray-s3"),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps) ++ spray
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
   ).dependsOn(spray_aws)
 
 
@@ -105,17 +105,10 @@ object Build extends Build {
     publishArtifact in Compile := false
   )
 
-  def deps = Seq(aws, akka, scalaTest, akka_testkit)
+  def deps = Seq(aws, akka, scalaTest, akka_testkit, spray)
 
-  def spray:Seq[Setting[Seq[ModuleID]]] = Seq(libraryDependencies <+= scalaVersion(sprayDependency(_)))
-
-  def sprayDependency(scalaVersion: String) = scalaVersion match {
-    case "2.10.4" => "io.spray" % "spray-client" % "1.3.2-20140428" % "compile"
-    case "2.11.2" => "io.spray" % "spray-client_2.11" % "1.3.1-20140423" % "compile"
-  }
-
+  val spray = "io.spray" %% "spray-client" % "1.3.2" % "compile"
   val aws = "com.amazonaws" % "aws-java-sdk" % "1.8.9.1" % "compile"
-  //val aws = "com.amazonaws" % "aws-java-sdk" % "1.7.1" % "compile"
   val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.5" % "compile"
   val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.5" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"   % "2.2.1" % "test"
