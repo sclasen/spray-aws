@@ -8,7 +8,7 @@ object Build extends Build {
 
   val buildSettings = Seq(
     organization := "com.sclasen",
-    version := "0.3.7-SNAPSHOT",
+    version := "0.4.0",
     scalaVersion := "2.11.2",
     crossScalaVersions := Seq("2.10.4", "2.11.2"),
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:implicitConversions", "-language:postfixOps"),
@@ -107,9 +107,9 @@ object Build extends Build {
 
   def deps = Seq(aws, akka, scalaTest, akka_testkit, spray)
 
-  val spray = "io.spray" %% "spray-client" % "1.3.2" % "compile"
-  val aws = "com.amazonaws" % "aws-java-sdk" % "1.8.9.1" % "compile"
-  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.5" % "compile"
+  val spray = "io.spray" %% "spray-client" % "1.3.3" % "compile"
+  val aws = "com.amazonaws" % "aws-java-sdk" % "1.10.2" % "compile"
+  val akka = "com.typesafe.akka" %% "akka-actor" % "2.3.11" % "compile"
   val akka_testkit = "com.typesafe.akka" %% "akka-testkit" % "2.3.5" % "test"
   val scalaTest   = "org.scalatest"     %% "scalatest"   % "2.2.1" % "test"
 }
