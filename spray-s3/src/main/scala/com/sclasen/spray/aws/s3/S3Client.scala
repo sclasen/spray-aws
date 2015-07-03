@@ -39,7 +39,7 @@ object MarshallersAndUnmarshallers {
   class S3Marshaller[X <: AmazonWebServiceRequest](httpMethod: HttpMethodName)
       extends Marshaller[Request[X], X] {
     def marshall(originalRequest: X): Request[X] = {
-      val request = new DefaultRequest[X](originalRequest, Constants.S3_SERVICE_NAME)
+      val request = new DefaultRequest[X](originalRequest, Constants.S3_SERVICE_DISPLAY_NAME)
       request.setHttpMethod(httpMethod)
       request.addHeader("x-amz-content-sha256", "required")
 

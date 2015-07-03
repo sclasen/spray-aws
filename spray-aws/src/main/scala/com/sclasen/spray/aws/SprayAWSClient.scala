@@ -86,7 +86,7 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
 
   def encodeQuery[T](awsReq: Request[T]) =
     awsReq.getParameters.asScala.toList.map({
-      case (k, v) => s"${awsURLEncode(k)}=${awsURLEncode(v)}"
+      case (k, vList) => vList.asScala.toList.map(v => s"${awsURLEncode(k)}=${awsURLEncode(v)}")
     }).mkString("&")
 
   def formData[T](awsReq: Request[T]) =
