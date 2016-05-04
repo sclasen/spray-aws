@@ -4,10 +4,11 @@ import java.io.ByteArrayInputStream
 import java.net.{ URI, URLEncoder }
 import java.util.{ List => JList }
 
+import scala.concurrent.Await
+
 import akka.actor.{ ActorSystem, _ }
 import akka.event.LoggingAdapter
 import akka.io.IO
-import akka.pattern._
 import akka.util.{ Timeout, ByteString }
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
@@ -20,14 +21,6 @@ import com.amazonaws.auth._
 import com.amazonaws.http.{ HttpMethodName, HttpResponseHandler, HttpResponse => AWSHttpResponse }
 import com.amazonaws.transform.Marshaller
 import com.amazonaws.{ AmazonServiceException, AmazonWebServiceResponse, DefaultRequest, Request }
-// import spray.can.Http
-// import spray.can.Http._
-// import spray.can.client.ClientConnectionSettings
-// import spray.client.pipelining._
-// import spray.http.HttpHeaders.RawHeader
-// import spray.http.HttpMethods._
-// import spray.http.HttpProtocols._
-// import spray.http._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -38,6 +31,8 @@ trait SprayAWSClientProps {
   def credentialsProvider: AWSCredentialsProvider
 
   def system: ActorSystem
+
+  def materializer: ActorMaterializer
 
   def factory: ActorRefFactory
 
@@ -70,8 +65,11 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
   val clientSettings = ClientConnectionSettings(props.system)
 
   def pipeline(request: HttpRequest)(implicit system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
-    val connectionFlow: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] = Http()
-      .outgoingConnection(request.uri.toString)
+    val connectionFlow: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] = if (ssl) {
+      Http().outgoingConnectionTls(endpointUri.getHost, port = port)
+    } else {
+      Http().outgoingConnection(endpointUri.getHost, port = port)
+    }
 
     Source.single(request)
       .via(connectionFlow)
@@ -119,10 +117,17 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     } else {
       val method: HttpMethod = awsReq.getHttpMethod
       method match {
-        case HttpMethods.POST =>
-          Post(path, formData(awsReq)) ~> addHeaders(headers(awsReq).head)
+        case HttpMethods.POST => {
+          headers(awsReq) match {
+            case Nil => Post(path, formData(awsReq))
+            case x :: xs => Post(path, formData(awsReq)) ~> addHeaders(x, xs:_*)
+          }
+        }
         case HttpMethods.PUT =>
-          Put(path, formData(awsReq)) ~> addHeaders(headers(awsReq).head)
+          headers(awsReq) match {
+            case Nil => Put(path, formData(awsReq))
+            case x :: xs => Put(path, formData(awsReq)) ~> addHeaders(x, xs:_*)
+          }
         case method =>
           val uri = Uri(path = Uri.Path(path), query = Uri.Query.Raw(encodeQuery(awsReq)))
           HttpRequest(method, uri, headers(awsReq))
@@ -131,11 +136,22 @@ abstract class SprayAWSClient(props: SprayAWSClientProps) {
     request
   }
 
-  def response[T](response: HttpResponse)(implicit handler: HttpResponseHandler[AmazonWebServiceResponse[T]]): Either[AmazonServiceException, T] = {
+  def response[T](response: HttpResponse)(
+    implicit handler: HttpResponseHandler[AmazonWebServiceResponse[T]],
+             actorSystem: ActorSystem,
+             materializer: ActorMaterializer
+  ): Either[AmazonServiceException, T] = {
+    import scala.util.Try
+
     val req = new DefaultRequest[T](props.service)
     val awsResp = new AWSHttpResponse(req, null)
-    val content: Array[Byte] = response.entity.dataBytes.runFold
-    awsResp.setContent(new ByteArrayInputStream(content))
+    val bs: Try[ByteString] = Try(Await.result(response.entity.toStrict(timeout.duration).map { _.data }, timeout.duration))
+
+    if (bs.isFailure) {
+      return Left(new com.amazonaws.AmazonServiceException(s"Unable to get response for $response"))
+    }
+
+    awsResp.setContent(new ByteArrayInputStream(bs.get.toArray))
     awsResp.setStatusCode(response.status.intValue)
     awsResp.setStatusText(response.status.defaultMessage)
     if (200 <= awsResp.getStatusCode && awsResp.getStatusCode < 300) {

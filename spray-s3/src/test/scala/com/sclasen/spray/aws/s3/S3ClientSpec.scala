@@ -10,13 +10,15 @@ import scala.collection.JavaConverters._
 import org.scalatest.Matchers
 import org.scalatest.fixture.WordSpec
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.amazonaws.services.s3.model._
 
 class S3ClientSpec extends WordSpec with Matchers {
 
-  val system = ActorSystem("test")
-  val props = S3ClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system)
+  implicit val system = ActorSystem("test")
+  val materializer = ActorMaterializer()
+  val props = S3ClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system, materializer)
   val client = new S3Client(props)
   val timeout = 10 seconds
 

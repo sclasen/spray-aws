@@ -3,6 +3,7 @@ package com.sclasen.spray.aws.kinesis
 import java.util.{ List => JList }
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
@@ -16,14 +17,14 @@ import com.sclasen.spray.aws._
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
-case class KinesisClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
+case class KinesisClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String) extends SprayAWSClientProps {
   val service = "kinesis"
 }
 
 object KinesisClientProps {
   val defaultEndpoint = "https://kinesis.us-east-1.amazonaws.com"
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
-    new KinesisClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String = defaultEndpoint) =
+    new KinesisClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, materializer, endpoint)
 }
 
 private object MarshallersAndUnmarshallers {
@@ -79,6 +80,10 @@ class KinesisClient(val props: KinesisClientProps) extends SprayAWSClient(props)
   val log = props.system.log
 
   val errorResponseHandler = new JsonErrorResponseHandler(kinesisExceptionUnmarshallers)
+
+  implicit val system = props.system
+
+  implicit val mat = props.materializer
 
   /**
    * Creates a stream.
