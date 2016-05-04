@@ -1,6 +1,7 @@
 package com.sclasen.spray.aws.dynamodb
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{ BasicAWSCredentials, AWSCredentialsProvider }
 import com.amazonaws.internal.StaticCredentialsProvider
 import collection.JavaConverters._
@@ -14,14 +15,14 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
+case class DynamoDBClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String) extends SprayAWSClientProps {
   val service = "dynamodb"
 }
 
 object DynamoDBClientProps {
   val defaultEndpoint = "https://dynamodb.us-east-1.amazonaws.com"
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
-    new DynamoDBClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String = defaultEndpoint) =
+    new DynamoDBClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, materializer, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
@@ -70,6 +71,10 @@ class DynamoDBClient(val props: DynamoDBClientProps) extends SprayAWSClient(prop
   val log = props.system.log
 
   val errorResponseHandler = new JsonErrorResponseHandler(dynamoExceptionUnmarshallers)
+
+  implicit val system = props.system
+
+  implicit val mat = props.materializer
 
   def sendListTables(aws: ListTablesRequest): Future[ListTablesResult] = fold(listTables(aws))
 

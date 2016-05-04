@@ -2,6 +2,7 @@ package com.sclasen.spray.aws.route53
 
 import akka.util.Timeout
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.stream.ActorMaterializer
 import com.amazonaws.internal.StaticCredentialsProvider
 import com.sclasen.spray.aws.{ SprayAWSClient, SprayAWSClientProps }
 import com.amazonaws.transform.{ Marshaller, StandardErrorUnmarshaller, Unmarshaller }
@@ -17,14 +18,14 @@ import com.amazonaws.services.route53.internal.Route53IdRequestHandler
 import com.amazonaws.util.TimingInfo
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials, AWS3Signer, Signer }
 
-case class Route53ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
+case class Route53ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String) extends SprayAWSClientProps {
   val service = "route53"
 }
 
 object Route53ClientProps {
   val defaultEndpoint = "https://route53.amazonaws.com"
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
-    new Route53ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String = defaultEndpoint) =
+    new Route53ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, materializer, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
@@ -87,6 +88,10 @@ class Route53Client(val props: Route53ClientProps) extends SprayAWSClient(props)
   val log = props.system.log
 
   override lazy val signer: Signer = new AWS3Signer()
+
+  implicit val system = props.system
+
+  implicit val materializer = props.materializer
 
   def errorResponseHandler = new DefaultErrorResponseHandler(route53ExceptionUnmarshallers)
 

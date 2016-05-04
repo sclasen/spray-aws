@@ -3,6 +3,7 @@ package com.sclasen.spray.aws.s3
 import java.util.{ List => JList }
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
@@ -17,7 +18,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 case class S3ClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem,
-  factory: ActorRefFactory, endpoint: String)
+  factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String)
     extends SprayAWSClientProps {
   val service = "s3"
   override val doubleEncodeForSigning = false
@@ -25,8 +26,8 @@ case class S3ClientProps(credentialsProvider: AWSCredentialsProvider, operationT
 
 object S3ClientProps {
   val defaultEndpoint = "https://s3.amazonaws.com"
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
-    new S3ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String = defaultEndpoint) =
+    new S3ClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, materializer, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
@@ -107,6 +108,11 @@ object MarshallersAndUnmarshallers {
 class S3Client(val props: S3ClientProps) extends SprayAWSClient(props) {
 
   import com.sclasen.spray.aws.s3.MarshallersAndUnmarshallers._
+
+
+  implicit val system = props.system
+
+  implicit val materializer = props.materializer
 
   val log = props.system.log
   def errorResponseHandler = new S3ErrorResponseHandler

@@ -1,6 +1,7 @@
 package com.sclasen.spray.aws.sqs
 
 import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{ AWSCredentialsProvider, BasicAWSCredentials }
 import com.amazonaws.internal.StaticCredentialsProvider
 
@@ -18,14 +19,14 @@ import akka.util.Timeout
 import com.sclasen.spray.aws._
 import com.amazonaws.AmazonServiceException
 
-case class SQSClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String) extends SprayAWSClientProps {
+case class SQSClientProps(credentialsProvider: AWSCredentialsProvider, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String) extends SprayAWSClientProps {
   val service = "sqs"
 }
 
 object SQSClientProps {
   val defaultEndpoint = "https://sqs.us-east-1.amazonaws.com"
-  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, endpoint: String = defaultEndpoint) =
-    new SQSClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, endpoint)
+  def apply(key: String, secret: String, operationTimeout: Timeout, system: ActorSystem, factory: ActorRefFactory, materializer: ActorMaterializer, endpoint: String = defaultEndpoint) =
+    new SQSClientProps(new StaticCredentialsProvider(new BasicAWSCredentials(key, secret)), operationTimeout, system, factory, materializer, endpoint)
 }
 
 object MarshallersAndUnmarshallers {
@@ -98,6 +99,10 @@ class SQSClient(val props: SQSClientProps) extends SprayAWSClient(props) {
   val log = props.system.log
 
   val errorResponseHandler = new DefaultErrorResponseHandler(sqsExceptionUnmarshallers)
+
+  implicit val system = props.system
+
+  implicit val mat = props.materializer
 
   def sendAddPermission(aws: AddPermissionRequest): Future[Unit] =
     fold(addPermission(aws))

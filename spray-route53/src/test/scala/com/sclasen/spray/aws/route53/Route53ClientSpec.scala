@@ -1,6 +1,7 @@
 package com.sclasen.spray.aws.route53
 
 import org.scalatest.{ MustMatchers, WordSpec }
+import akka.stream.ActorMaterializer
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.duration._
@@ -11,8 +12,9 @@ class Route53ClientSpec extends WordSpec with MustMatchers {
 
   "A Route53Client" must {
     "Work" in {
-      val system = ActorSystem("test")
-      val props = Route53ClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system)
+      implicit val system = ActorSystem("test")
+      val materializer = ActorMaterializer()
+      val props = Route53ClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system, materializer)
       val client = new Route53Client(props)
       val ref = "testing" + System.currentTimeMillis()
       val req = new CreateHostedZoneRequest().withName("www.ticktock.com.")

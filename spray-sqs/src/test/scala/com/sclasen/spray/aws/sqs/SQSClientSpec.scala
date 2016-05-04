@@ -5,6 +5,7 @@ import java.util.UUID
 
 import org.scalatest.WordSpec
 import org.scalatest.Matchers
+import akka.stream.ActorMaterializer
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.Await
@@ -15,8 +16,9 @@ class SQSClientSpec extends WordSpec with Matchers {
 
   "A SQSClient" must {
     "Create queue, use it and delete it" in {
-      val system = ActorSystem("test")
-      val props = SQSClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system)
+      implicit val system = ActorSystem("test")
+      val materializer = ActorMaterializer()
+      val props = SQSClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(100 seconds), system, system, materializer)
       val client = new SQSClient(props)
       val result = Await.result(client.sendCreateQueue(new CreateQueueRequest(UUID.randomUUID.toString)), 100 seconds)
       val queueUrl = result.getQueueUrl

@@ -2,6 +2,7 @@ package com.sclasen.spray.aws.kinesis
 
 import org.scalatest.WordSpec
 import org.scalatest.MustMatchers
+import akka.stream.ActorMaterializer
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import concurrent.Await
@@ -24,8 +25,9 @@ class KinesisClientSpec extends WordSpec with MustMatchers {
 
   val randomBytes = java.util.UUID.randomUUID.toString.getBytes
 
-  val system = ActorSystem("test")
-  val props = KinesisClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(10 seconds), system, system)
+  implicit val system = ActorSystem("test")
+  val materializer = ActorMaterializer()
+  val props = KinesisClientProps(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"), Timeout(10 seconds), system, system, materializer)
   val client = new KinesisClient(props)
 
   "A KinesisClient" must {
